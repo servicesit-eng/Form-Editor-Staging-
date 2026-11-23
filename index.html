@@ -644,6 +644,7 @@ var NAMES=[['นาย','สมชาย','ใจดี'],['นาง','สม�
 var FT=['label','title','logo','text_input','textarea','date','radio','checkbox','select','signature','checkbox_agree','divider'];
 var INP=['text_input','textarea','date','radio','checkbox','select','signature','checkbox_agree'];
 var OPT=['radio','checkbox','select'];
+var MAX_FIELDS=200;
 var FTL={label:'ข้อความ',title:'หัวข้อ',logo:'โลโก้',text_input:'ช่องข้อความ',textarea:'ข้อความยาว',date:'วันที่',radio:'ตัวเลือกเดียว',checkbox:'หลายตัวเลือก',select:'รายการเลือก',signature:'ลายเซ็น',checkbox_agree:'ยอมรับข้อตกลง',divider:'เส้นคั่น'};
 var FTI={label:'text',title:'title',logo:'image',text_input:'input',textarea:'area',date:'date',radio:'radio',checkbox:'cbx',select:'sel',signature:'sign',checkbox_agree:'agree',divider:'div'};
 var ST={SUBMITTED:'รอตรวจสอบ',APPROVED:'อนุมัติแล้ว',REJECTED:'ไม่อนุมัติ'};
@@ -768,7 +769,7 @@ var txt=S.conn==='ok'?'เชื่อมต่อแล้ว':S.conn==='bad'?'
 el.className='conn '+S.conn;
 el.innerHTML='<i></i><span>'+esc(txt)+'</span>';el.title=S.connMsg||'คลิกเพื่อทดสอบการเชื่อมต่อ'}
 function testConn(silent){setConn('wait');var t0=performance.now();
-return rawApi('getHeaderLogo',{},false,{timeout:20000}).then(function(){
+return rawApi('testSupabaseConnection',{},false,{timeout:20000}).then(function(){
 var ms=Math.round(performance.now()-t0);setConn('ok','เชื่อมต่อสำเร็จ '+ms+' ms');
 if(!silent)toast('เชื่อมต่อสำเร็จ ('+ms+' ms)',{type:'ok'});return true})
 .catch(function(e){setConn('bad',e.message);if(!silent)toast('เชื่อมต่อไม่สำเร็จ: '+e.message,{type:'bad',ms:7000});return false})}
@@ -778,9 +779,9 @@ if(typeof x==='string'){try{x=JSON.parse(x)}catch(e){x=null}}
 if(!Array.isArray(x)&&value&&value.data){var d=value.data;x=Array.isArray(d)?d:(d&&d.fields);if(typeof x==='string'){try{x=JSON.parse(x)}catch(e){x=null}}}
 return Array.isArray(x)?x:null}
 function normalizeFieldNames(fields){var seen=Object.create(null),changed=0;(fields||[]).forEach(function(f,i){if(!f||typeof f!=='object')return;var raw=String(f.name||'').trim(),base=raw.toLowerCase().replace(/[^a-z0-9_]/g,'_').replace(/^_+|_+$/g,'').slice(0,60);if(!base)base=(String(f.field_type||'field').toLowerCase().replace(/[^a-z0-9_]/g,'_')||'field')+'_'+(i+1);base=base.slice(0,60);var name=base,n=2;while(seen[name]){var suffix='_'+n++;name=base.slice(0,60-suffix.length)+suffix}seen[name]=1;if(f.name!==name){f.name=name;changed++}});return changed}
-function applyTemplates(list,activeOnly){if(!Array.isArray(list))return;
-var keep=DB.templates.filter(function(t){return isLocal(t.id)});
-var server=list.filter(function(t){return isUuid(t.id)}).map(function(t){var ex=tpl(t.id),rf=fieldList(t),source=rf!==null?rf:((ex&&Array.isArray(ex.fields))?ex.fields:[]),clean=dedupeFields(source);
+ function applyTemplates(list,activeOnly){if(!Array.isArray(list))return;
+ var keep=DB.templates.filter(function(t){return isLocal(t.id)});
+ var server=list.filter(function(t){return isUuid(t.id)}).map(function(t){var ex=tpl(t.id),rf=fieldList(t),source=rf!==null?rf:[],clean=dedupeFields(source);
 if(ex&&ex.department&&ex.department!=='—')DB.deptMap[t.id]=ex.department;
 return{id:String(t.id).toLowerCase(),name:t.name,description:t.description||'',department:DB.deptMap[t.id]||(ex&&ex.department)||'—',
 is_active:activeOnly?true:t.is_active===true,created_at:t.created_at||new Date().toISOString(),updated_at:t.updated_at||t.created_at||new Date().toISOString(),
@@ -862,11 +863,16 @@ r.pos_x=clamp(mm(rx,PW),0,PW-w);r.pos_y=clamp(mm(ry,PH),0,PH-h);
 r.font_size=clamp(read(f.font_size,14).v,6,72);return r}
 function setStaleFieldIds(t,ids){var u=[],seen={};(ids||[]).forEach(function(id){id=String(id||'');if(id&&isUuid(id)&&!seen[id]){seen[id]=1;u.push(id)}});
 try{Object.defineProperty(t,'_staleFieldIds',{value:u,writable:true,configurable:true,enumerable:false})}catch(e){t._staleFieldIds=u}return u}
-function dedupeFields(fields){var out=[],byId=Object.create(null);
+function fieldFingerprint(f){return JSON.stringify([f&&f.field_type||'',f&&f.label||'',String(f&&f.value||''),Array.isArray(f&&f.options)?f.options:[],f&&f.required===true,f&&f.auto_grow===true,f&&f.field_group||'',Number(f&&f.pos_x||0),Number(f&&f.pos_y||0),Number(f&&f.width||0),Number(f&&f.height||0),Number(f&&f.font_size||0),f&&f.font_family||'',f&&f.font_weight||'',f&&f.text_color||'',f&&f.bg_color||'',f&&f.border_style||'',f&&f.border_color||'',f&&f.text_align||''])}
+function dedupeFields(fields){var out=[],byId=Object.create(null),byName=Object.create(null),byFp=Object.create(null),stale=[];
 (fields||[]).forEach(function(raw){if(!raw||typeof raw!=='object')return;
-var f=norm(raw),id=String(f.id||'');if(!id){f.id=tmpId('f_');id=f.id}
-if(byId[id])return;byId[id]=1;out.push(f)});
-return{fields:out,stale:[]}}
+var f=norm(raw),id=String(f.id||''),real=isUuid(id),name=String(f.name||'').trim().toLowerCase(),fp=fieldFingerprint(f);
+if(FT.indexOf(f.field_type)<0){if(real)stale.push(id);return}
+if(!id){f.id=tmpId('f_');id=f.id;real=false}
+if(out.length>=MAX_FIELDS){if(real)stale.push(id);return}
+if(byId[id]||(real&&name&&byName[name])||(real&&fp&&byFp[fp])){if(real)stale.push(id);return}
+byId[id]=1;if(real&&name)byName[name]=1;if(real&&fp)byFp[fp]=1;out.push(f)});
+return{fields:out,stale:mergeIds(stale)}}
 function mergeIds(){var out=[],seen={};Array.prototype.forEach.call(arguments,function(list){(list||[]).forEach(function(id){id=String(id||'');if(id&&!seen[id]){seen[id]=1;out.push(id)}})});return out}
 function mk(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!==undefined)e.textContent=x;return e}
 function fieldEl(f,mode,data,pfx){var el=document.createElement('div');
@@ -1258,13 +1264,13 @@ $('#lgGo').onclick=doLogin;
 $('#lgPass').onkeydown=function(e){if(e.key==='Enter')doLogin()};
 $('#lgEmail').onkeydown=function(e){if(e.key==='Enter')$('#lgPass').focus()};
 $('#lgTest').onclick=function(){var b=$('#lgTest');b.disabled=true;
-lgDiag('wait','กำลังทดสอบการเชื่อมต่อ…','ส่งคำขอ getHeaderLogo ไปยัง Apps Script');
+lgDiag('wait','กำลังทดสอบการเชื่อมต่อ…','ตรวจ Apps Script และ Supabase จริง');
 var t0=performance.now();
-rawApi('getHeaderLogo',{},false,{timeout:20000}).then(function(){
+rawApi('testSupabaseConnection',{},false,{timeout:20000}).then(function(){
 var ms=Math.round(performance.now()-t0);setConn('ok','เชื่อมต่อสำเร็จ '+ms+' ms');
 lgDiag('ok','เชื่อมต่อเซิร์ฟเวอร์สำเร็จ','ตอบกลับใน <b>'+ms+' ms</b> — กรอกอีเมลและรหัสผ่านเพื่อเข้าระบบได้เลย');syncPublic()})
 .catch(function(e){setConn('bad',e.message);
-lgDiag('err','เชื่อมต่อไม่สำเร็จ',esc(e.message)+'<br><br>ตรวจตามนี้:<br>1. Apps Script → Deploy → Manage deployments<br>2. Execute as = <code>Me</code> · Who has access = <code>Anyone</code><br>3. Deploy → <code>New version</code><br>4. Script Properties มี <code>SUPABASE_URL</code>, <code>SUPABASE_PUBLISHABLE_KEY</code>, <code>SUPABASE_SECRET_KEY</code>')})
+lgDiag('err','เชื่อมต่อไม่สำเร็จ',esc(e.message)+'<br><br>ตรวจตามนี้:<br>1. Apps Script → Deploy → Manage deployments<br>2. Execute as = <code>Me</code> · Who has access = <code>Anyone</code><br>3. Deploy → <code>New version</code><br>4. Script Properties มี <code>SUPABASE_URL</code>, <code>SUPABASE_PUBLISHABLE_KEY</code>, <code>SUPABASE_SECRET_KEY</code> และต้องเป็นโปรเจกต์เดียวกับ URL ที่หน้าเว็บเรียก')})
 .then(function(){b.disabled=false})};
 function doLogin(){var email=$('#lgEmail').value.trim().toLowerCase(),pass=$('#lgPass').value;
 if(!email||!pass){lgDiag('err','กรอกข้อมูลไม่ครบ','กรุณากรอกทั้งอีเมลและรหัสผ่าน');return}
@@ -1474,15 +1480,16 @@ DB.drafts[S.b.id]={fields:JSON.parse(JSON.stringify(S.b.fields)),deleted:S.b.del
 var saveDraft=debounce(writeDraftNow,700);
 function openBuilder(id){if(S.shell!=='admin'||!token){setShell('public');openLogin();return}
 ensureFields(id,isUuid(id),true).then(function(t){if(!t)return;
-var clean=dedupeFields(t.fields||[]);t.fields=clean.fields;setStaleFieldIds(t,[]);
-S.b=Object.assign({},S.b,{id:id,fields:JSON.parse(JSON.stringify(t.fields||[])).map(norm),deleted:[],sel:null,selIds:[],dirty:false,undo:[],redo:[],saving:false,remoteReady:isUuid(id),saveBlocked:false});
+var clean=dedupeFields(t.fields||[]);t.fields=clean.fields;var stale=mergeIds(t._staleFieldIds||[],clean.stale),groupChanged=normalizeGroupOrder(t.fields);
+setStaleFieldIds(t,stale);
+S.b=Object.assign({},S.b,{id:id,fields:JSON.parse(JSON.stringify(t.fields||[])).map(norm),deleted:stale.slice(),sel:null,selIds:[],dirty:groupChanged||stale.length>0,undo:[],redo:[],saving:false,remoteReady:isUuid(id),saveBlocked:false});
 S.grow.clear();
 var dr=DB.drafts[id],restored=false,draftAt=dr&&Number(dr.at)||0,savedAt=t.updated_at?Date.parse(t.updated_at):0;
 if(!isFinite(savedAt))savedAt=0;var draftBase=dr&&String(dr.baseUpdatedAt||''),currentBase=String(t.updated_at||'');
 var draftHasPersisted=dr&&Array.isArray(dr.fields)&&dr.fields.some(function(f){return isUuid(f&&f.id)}),canRestore=dr&&Array.isArray(dr.fields)&&dr.fields.length&&((!isUuid(id)||draftHasPersisted)&&((draftBase&&draftBase===currentBase)||(!draftBase&&savedAt>0&&draftAt>savedAt)));
-if(canRestore){var draftClean=dedupeFields(dr.fields);S.b.fields=JSON.parse(JSON.stringify(draftClean.fields)).map(norm);S.b.deleted=mergeIds(dr.deleted,draftClean.stale);S.b.dirty=true;restored=true}
+if(canRestore){var draftClean=dedupeFields(dr.fields);var draftFields=draftClean.fields;normalizeGroupOrder(draftFields);S.b.fields=JSON.parse(JSON.stringify(draftFields)).map(norm);S.b.deleted=mergeIds(stale,dr.deleted,draftClean.stale);S.b.dirty=true;restored=true}
 else if(dr){delete DB.drafts[id];persist()}
-LAYOUT.sig='';S.sec=null;go('builder');
+LAYOUT.sig='';S.sec=null;go('builder');if(restored||groupChanged||stale.length)markDirty();
 if(restored)toast('กู้คืนฉบับร่างที่ค้างไว้ ('+fdate(new Date(dr.at).toISOString())+')',{type:'info',ms:5000})}).catch(function(e){setConn('bad',e.message);toast('โหลดฟิลด์ของฟอร์มไม่สำเร็จ: '+e.message+' — จึงยังไม่เปิดหน้าแก้ไขเพื่อป้องกันข้อมูลซ้ำ',{type:'bad',ms:9000})})}
 function vBuilder(v){if(!S.b.id){var list=DB.templates;
 v.innerHTML=head('builder','<button class="btn pri" data-a="new">'+ic('plus')+'สร้างฟอร์มใหม่</button>')+
@@ -1649,18 +1656,20 @@ return '<div class="layer'+((S.b.selIds||[]).indexOf(f.id)>=0||S.b.sel===f.id?' 
 '<button class="lx" data-lx="'+esc(f.id)+'">'+ic('x',12)+'</button></div>'}).join('')}).join('')||
 '<p style="font-size:12px;color:var(--tx3);padding:8px">ยังไม่มีฟิลด์ — ลากจากกล่องด้านบน</p>';
 var dragId=null;
-function dropField(id,targetId,targetGroup,after){var b=S.b,from=b.fields.map(function(f){return f.id}).indexOf(id);if(from<0)return;
-var targetIndex=targetId?b.fields.map(function(f){return f.id}).indexOf(targetId):-1;if(targetId&&targetIndex<0)return;
-if(targetId===id)return;
-var moving=b.fields[from],oldGroup=String(moving.field_group||'').trim(),newGroup=String(targetGroup||'').trim();
-var next=b.fields.slice();next.splice(from,1);
-var insertAt=next.length;
-if(targetId){var ti=next.map(function(f){return f.id}).indexOf(targetId);if(ti<0)return;insertAt=ti+(after?1:0)}
-else if(newGroup){var last=-1;next.forEach(function(f,i){if(String(f.field_group||'').trim()===newGroup)last=i});if(last>=0)insertAt=last+1}
-var before=b.fields.map(function(f){return f.id}).join('\u001f');next.splice(insertAt,0,moving);
-if(oldGroup===newGroup&&before===next.map(function(f){return f.id}).join('\u001f'))return;
-pushUndo();moving.field_group=newGroup;b.fields=next;var el=$('#canvas [data-fid="'+cssEsc(id)+'"]');if(el){if(newGroup)el.dataset.group=newGroup;else delete el.dataset.group}
-markDirty();renderLayers();selectField(id)}
+function normalizeGroupOrder(fields){var src=fields||[],out=[],seen={},changed=false;
+src.forEach(function(f){var g=String(f&&f.field_group||'').trim();if(!g){out.push(f);return}if(seen[g])return;seen[g]=1;src.forEach(function(x){if(String(x&&x.field_group||'').trim()===g)out.push(x)})});
+for(var i=0;i<src.length;i++)if(src[i]!==out[i]){changed=true;break}
+if(changed){Array.prototype.splice.apply(src,[0,src.length].concat(out))}return changed}
+function dropField(id,targetId,targetGroup,after){var b=S.b;
+normalizeGroupOrder(b.fields);var from=b.fields.map(function(f){return f.id}).indexOf(id);if(from<0)return;
+var moving=b.fields[from],oldGroup=String(moving.field_group||'').trim(),movingIds=oldGroup?b.fields.filter(function(f){return String(f.field_group||'').trim()===oldGroup}).map(function(f){return f.id}):[id],movingSet={};movingIds.forEach(function(x){movingSet[x]=1});
+if(targetId&&movingSet[targetId])return;
+var target=targetId?b.fields.filter(function(f){return f.id===targetId})[0]:null,targetGroupName=String(targetGroup||'').trim(),newGroup=oldGroup||targetGroupName,block=b.fields.filter(function(f){return movingSet[f.id]}),next=b.fields.filter(function(f){return !movingSet[f.id]}),insertAt=next.length;
+if(target){if(targetGroupName){var members=next.filter(function(f){return String(f.field_group||'').trim()===targetGroupName}),first=members.length?next.indexOf(members[0]):-1,last=members.length?next.indexOf(members[members.length-1]):-1;insertAt=after?(last+1):Math.max(0,first)}else{var ti=next.indexOf(target);if(ti<0)return;insertAt=ti+(after?1:0)}}
+else if(newGroup){var groupItems=next.filter(function(f){return String(f.field_group||'').trim()===newGroup});if(groupItems.length)insertAt=next.indexOf(groupItems[groupItems.length-1])+1}
+var before=b.fields.map(function(f){return f.id}).join('\u001f');block.forEach(function(f){f.field_group=newGroup});next.splice.apply(next,[insertAt,0].concat(block));normalizeGroupOrder(next);
+if(before===next.map(function(f){return f.id}).join('\u001f')&&oldGroup===newGroup)return;
+pushUndo();b.fields=next;markDirty();renderLayers();selectField(id)}
 $$('.layer').forEach(function(l){
 l.addEventListener('dragstart',function(e){dragId=l.dataset.lid;l.classList.add('drag');try{e.dataTransfer.setData('text/plain',dragId);e.dataTransfer.effectAllowed='move'}catch(x){}});
 l.addEventListener('dragend',function(){dragId=null;l.classList.remove('drag');$$('.layer,.layer-group').forEach(function(x){x.classList.remove('over')})});
@@ -1679,16 +1688,15 @@ if(a){a.classList.toggle('on',ov>0);a.classList.toggle('clean',ov===0);
 a.innerHTML=ic(ov?'layers':'check',13)+'<span>'+(ov?'ซ้อนทับ '+ov:'ไม่ซ้อนทับ')+'</span>'}
 if(b){b.classList.toggle('bad',cl>0);b.classList.toggle('clean',cl===0);
 b.innerHTML=ic(cl?'warn':'check',13)+'<span>'+(cl?'เกินกล่อง '+cl:'เนื้อหาพอดี')+'</span>'}}
-function resolveOverlaps(){var fs=S.b.fields.slice().sort(function(a,b){return a.pos_y-b.pos_y||a.pos_x-b.pos_x});
-var placed=[],moved=0,overlap=function(a,b){var w=Math.min(a.pos_x+a.width,b.pos_x+b.width)-Math.max(a.pos_x,b.pos_x),h=Math.min(a.pos_y+a.height,b.pos_y+b.height)-Math.max(a.pos_y,b.pos_y);
-if(w<=0||h<=0)return false;var sm=Math.min(a.width*a.height,b.width*b.height);return sm>0&&(w*h)/sm>=.6},free=function(f){return !placed.some(function(p){return overlap(p,f)})};
-fs.forEach(function(f){var ox=clamp(f.pos_x,0,PW-f.width),oy=clamp(f.pos_y,0,PH-f.height),found=false;
-f.pos_x=ox;f.pos_y=oy;found=free(f);
-var seek=function(sx,sy){for(var y=Math.max(0,Math.floor(sy));y<=PH-f.height&&!found;y+=1)for(var x=Math.max(0,Math.floor(sx));x<=PW-f.width&&!found;x+=1){f.pos_x=Math.round(x*2)/2;f.pos_y=Math.round(y*2)/2;if(free(f))found=true}};
-if(!found){seek(ox,oy);if(!found){f.pos_x=0;f.pos_y=0;seek(0,0)}}
-if(!found){f.pos_x=ox;f.pos_y=oy}if(f.pos_x!==ox||f.pos_y!==oy)moved++;placed.push(f)});return moved}
-function autoArrange(){var fs=S.b.fields.slice().sort(function(a,b){return a.pos_y-b.pos_y||a.pos_x-b.pos_x});
-var y=18;fs.forEach(function(f){f.pos_x=clamp(f.pos_x,0,PW-f.width);f.pos_y=Math.round(y*2)/2;y+=Math.max(f.height,3)+3});return fs.length}
+function layoutUnits(fields){var units=[],groups=Object.create(null);(fields||[]).forEach(function(f){var g=String(f&&f.field_group||'').trim();if(!g){units.push({items:[f]});return}if(!groups[g]){groups[g]={items:[]};units.push(groups[g])}groups[g].items.push(f)});return units}
+function unitBounds(u){var minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;(u&&u.items||[]).forEach(function(f){minX=Math.min(minX,f.pos_x);minY=Math.min(minY,f.pos_y);maxX=Math.max(maxX,f.pos_x+f.width);maxY=Math.max(maxY,f.pos_y+f.height)});return{minX:isFinite(minX)?minX:0,minY:isFinite(minY)?minY:0,maxX:isFinite(maxX)?maxX:0,maxY:isFinite(maxY)?maxY:0,width:Math.max(0,maxX-minX),height:Math.max(0,maxY-minY)}}
+function unitOverlap(a,b){return (a.items||[]).some(function(x){return (b.items||[]).some(function(y){var w=Math.min(x.pos_x+x.width,y.pos_x+y.width)-Math.max(x.pos_x,y.pos_x),h=Math.min(x.pos_y+x.height,y.pos_y+y.height)-Math.max(x.pos_y,y.pos_y);if(w<=0||h<=0)return false;var sm=Math.min(x.width*x.height,y.width*y.height);return sm>0&&(w*h)/sm>=.6})})}
+function resolveOverlaps(){normalizeGroupOrder(S.b.fields);var units=layoutUnits(S.b.fields).sort(function(a,b){var x=unitBounds(a),y=unitBounds(b);return x.minY-y.minY||x.minX-y.minX}),placed=[],moved=0;
+units.forEach(function(u){var base=u.items.map(function(f){return{f:f,ox:f.pos_x,oy:f.pos_y}}),ob=unitBounds(u),found=!placed.some(function(p){return unitOverlap(u,p)}),tryAt=function(x,y){applyGroupDelta(base,0,0);var d=clampGroupDelta(base,x-ob.minX,y-ob.minY);applyGroupDelta(base,d.dx,d.dy);if(placed.some(function(p){return unitOverlap(u,p)})){applyGroupDelta(base,0,0);return false}if(d.dx||d.dy)moved++;return true};
+if(!found){for(var y=Math.max(0,Math.floor(ob.minY));y<=PH-ob.height&&!found;y++)for(var x=Math.max(0,Math.floor(ob.minX));x<=PW-ob.width&&!found;x++)found=tryAt(x,y);if(!found){applyGroupDelta(base,0,0);tryAt(0,0)}}
+placed.push({items:u.items.slice()})});return moved}
+function autoArrange(){normalizeGroupOrder(S.b.fields);var units=layoutUnits(S.b.fields).sort(function(a,b){var x=unitBounds(a),y=unitBounds(b);return x.minY-y.minY||x.minX-y.minX}),y=18;
+units.forEach(function(u){var b=unitBounds(u),base=u.items.map(function(f){return{f:f,ox:f.pos_x,oy:f.pos_y}}),d=clampGroupDelta(base,clamp(b.minX,0,PW-b.width)-b.minX,y-b.minY);applyGroupDelta(base,d.dx,d.dy);y=Math.round((y+Math.max(b.height,3)+3)*2)/2});return S.b.fields.length}
 function clipDrawer(){var list=layoutFlags().clip;
 if(!list.length){toast('เนื้อหาทุกกล่องพอดีแล้ว',{type:'ok'});return}
 openDrawer('ตรวจเลย์เอาต์','เนื้อหาเกินกล่อง '+list.length+' ฟิลด์',
@@ -1735,7 +1743,7 @@ function selectedFieldIds(){var b=S.b,ids=(b.selIds||[]).filter(function(id){ret
 if(!ids.length&&b.sel&&b.fields.some(function(f){return f.id===b.sel}))ids=[b.sel];return ids}
 function groupSelected(){var b=S.b,ids=selectedFieldIds();if(ids.length<2){toast('ลากเมาส์คลุมฟิลด์อย่างน้อย 2 กล่องก่อนกด Group',{type:'warn'});return}
 var names=ids.map(function(id){var f=b.fields.filter(function(x){return x.id===id})[0];return f&&f.field_group||''}),same=names.every(function(x){return x&&x===names[0]}),name=window.prompt('ชื่อ Group ของฟิลด์ที่เลือก',same?names[0]:'ข้อมูลกลุ่ม');
-if(name===null)return;name=name.trim();if(!name){toast('กรุณาระบุชื่อ Group',{type:'warn'});return}name=name.slice(0,80);pushUndo();ids.forEach(function(id){var f=b.fields.filter(function(x){return x.id===id})[0];if(f)f.field_group=name});b.selIds=ids;b.sel=ids[0];LAYOUT.sig='';markDirty();repaint();renderControls();paintBadges();toast('จัด Group '+ids.length+' ฟิลด์แล้ว',{type:'ok'})}
+if(name===null)return;name=name.trim();if(!name){toast('กรุณาระบุชื่อ Group',{type:'warn'});return}name=name.slice(0,80);pushUndo();ids.forEach(function(id){var f=b.fields.filter(function(x){return x.id===id})[0];if(f)f.field_group=name});normalizeGroupOrder(b.fields);b.selIds=ids;b.sel=ids[0];LAYOUT.sig='';markDirty();repaint();renderControls();paintBadges();toast('จัด Group '+ids.length+' ฟิลด์แล้ว',{type:'ok'})}
 function ungroupSelected(){var b=S.b,ids=selectedFieldIds();if(!ids.length){toast('เลือกฟิลด์ที่ต้องการยกเลิก Group ก่อน',{type:'warn'});return}
 pushUndo();ids.forEach(function(id){var f=b.fields.filter(function(x){return x.id===id})[0];if(f)f.field_group=''});LAYOUT.sig='';markDirty();repaint();renderControls();paintBadges();toast('ยกเลิก Group แล้ว',{type:'ok'})}
 function openPreview(data){var c=paintSheet('#pvCanvas',S.b.fields,'fill',data||{});
@@ -1769,7 +1777,7 @@ Object.assign(f,{width:d.width,height:d.height,font_size:d.font_size,font_weight
 text_color:d.text_color,bg_color:d.bg_color,border_style:d.border_style,border_color:d.border_color,auto_grow:false});
 S.grow.clear();LAYOUT.sig='';markDirty();repaint();renderControls();paintBadges();toast('คืนค่ารูปแบบฟิลด์แล้ว',{type:'ok',undo:doUndo})}
 else if(k==='align'){var fa=b.fields.filter(function(x){return x.id===b.sel})[0];if(!fa)return;pushUndo();
-var others=b.fields.filter(function(x){return x.id!==fa.id}),guard=0;
+var groupItems=groupMoveItems(fa),oldX=fa.pos_x,oldY=fa.pos_y,others=b.fields.filter(function(x){return x.id!==fa.id&&(!fa.field_group||String(x.field_group||'').trim()!==String(fa.field_group||'').trim())}),guard=0;
 while(guard++<80){var hit=others.filter(function(p){
 var w=Math.min(p.pos_x+p.width,fa.pos_x+fa.width)-Math.max(p.pos_x,fa.pos_x);
 var h=Math.min(p.pos_y+p.height,fa.pos_y+fa.height)-Math.max(p.pos_y,fa.pos_y);
@@ -1777,7 +1785,8 @@ if(w<=0||h<=0)return false;var sm=Math.min(p.width*p.height,fa.width*fa.height);
 return sm>0&&(w*h)/sm>=.6})[0];
 if(!hit)break;fa.pos_y=Math.round((hit.pos_y+hit.height+3)*2)/2;
 if(fa.pos_y+fa.height>PH-2){fa.pos_y=2;fa.pos_x=clamp(fa.pos_x+6,0,PW-fa.width)}}
-LAYOUT.sig='';markDirty();patchField(fa);renderControls();renderLayers();paintBadges();toast('จัดตำแหน่งไม่ให้ทับแล้ว',{type:'ok'})}
+if(fa.field_group){var gd=clampGroupDelta(groupItems,fa.pos_x-oldX,fa.pos_y-oldY);applyGroupDelta(groupItems,gd.dx,gd.dy)}
+LAYOUT.sig='';markDirty();repaint();renderControls();renderLayers();paintBadges();toast(fa.field_group?'จัด Group ไม่ให้ทับแล้ว':'จัดตำแหน่งไม่ให้ทับแล้ว',{type:'ok'})}
 else if(k==='center'){var fc=b.fields.filter(function(x){return x.id===b.sel})[0];if(!fc)return;pushUndo();
 var citems=groupMoveItems(fc),gb=groupBounds(citems),targetX=Math.round((PW-gb.width)/2*2)/2,cd=clampGroupDelta(citems,targetX-gb.minX,0);applyGroupDelta(citems,cd.dx,0);LAYOUT.sig='';markDirty();repaint();renderControls();toast(fc.field_group?'จัด Group ให้อยู่กึ่งกลางแล้ว':'จัดกึ่งกลางแนวนอนแล้ว',{type:'ok'})}};
 $$('.tool').forEach(function(t){
@@ -1850,7 +1859,7 @@ savedFields.forEach(function(f,i){var n=mappedFieldId(res,ids[i],i);if(n){if(b.s
 if(unresolved.length)throw new Error('เซิร์ฟเวอร์ไม่ส่งรหัสฟิลด์กลับมา: '+unresolved.join(', ')+' — ยกเลิกการยืนยันการบันทึกเพื่อป้องกันฟิลด์ซ้ำ');
 layoutSaved=true;b.remoteReady=true;b.saveBlocked=false;
 var stillDeleted=b.deleted.filter(function(id){return sentDeleted.indexOf(id)<0});t.fields=savedFields;b.deleted=stillDeleted;setStaleFieldIds(t,stillDeleted);b.serverUpdatedAt=t.updated_at;LAYOUT.sig='';
-var changedDuring=JSON.stringify(b.fields)!==JSON.stringify(savedFields)||JSON.stringify(b.deleted.filter(isUuid))!==JSON.stringify(stillDeleted);retryAfter=changedDuring;
+var changedDuring=JSON.stringify(b.fields)!==JSON.stringify(savedFields)||JSON.stringify(b.deleted.filter(isUuid))!==JSON.stringify(stillDeleted)||stillDeleted.length>0;retryAfter=changedDuring;
 if(!changedDuring){b.dirty=false;b.undo=[];b.redo=[];delete DB.drafts[oldId];delete DB.drafts[tid]}else{b.dirty=true;writeDraftNow()}
 persist();updateUndoUI();invalidate('getFormTemplate');invalidate('getFormTemplates');invalidate('getPublicFormTemplate');
 if(S.sec==='builder'&&S.b.id===t.id){repaint();renderControls();paintBadges()}
@@ -1893,10 +1902,11 @@ var base=f.name+'_copy',nm=base,k=2;
 while(b.fields.some(function(x){return x.name===nm})){nm=base+'_'+k;k++}
 c.name=nm;c.pos_y=clamp(f.pos_y+f.height+3,0,PH-c.height);
 if(c.pos_y===f.pos_y)c.pos_x=clamp(f.pos_x+6,0,PW-c.width);
-pushUndo();b.fields.push(c);b.sel=c.id;S.grow.clear();LAYOUT.sig='';markDirty();repaint();renderControls();paintBadges()}
-function reorder(id,dir){var b=S.b,i=b.fields.map(function(f){return f.id}).indexOf(id);if(i<0)return;
-var j=clamp(i+dir,0,b.fields.length-1);if(i===j)return;
-pushUndo();var m=b.fields.splice(i,1)[0];b.fields.splice(j,0,m);markDirty();renderLayers()}
+normalizeGroupOrder(b.fields);var insertAt=b.fields.length;if(f.field_group){var members=b.fields.filter(function(x){return String(x.field_group||'').trim()===String(f.field_group||'').trim()});insertAt=b.fields.indexOf(members[members.length-1])+1}
+pushUndo();b.fields.splice(insertAt,0,c);b.sel=c.id;S.grow.clear();LAYOUT.sig='';markDirty();repaint();renderControls();paintBadges()}
+function reorder(id,dir){var b=S.b;normalizeGroupOrder(b.fields);var i=b.fields.map(function(f){return f.id}).indexOf(id);if(i<0)return;
+var f=b.fields[i],group=String(f.field_group||'').trim(),block=group?b.fields.filter(function(x){return String(x.field_group||'').trim()===group}):[f],ids={};block.forEach(function(x){ids[x.id]=1});var start=b.fields.indexOf(block[0]),end=start+block.length-1,anchor=dir<0?b.fields[start-1]:b.fields[end+1];if(!anchor)return;
+var next=b.fields.filter(function(x){return !ids[x.id]}),ai=next.indexOf(anchor),at=dir<0?ai:ai+1;pushUndo();next.splice.apply(next,[at,0].concat(block));b.fields=next;markDirty();renderLayers()}
 var DR=null;
 var mmScale=function(){var c=$('#canvas');if(!c)return 1;var r=c.getBoundingClientRect();return r.width?PW/r.width:1};
 function groupedFields(f){if(!f||!f.field_group)return f?[f]:[];var g=f.field_group;return S.b.fields.filter(function(x){return x.field_group===g})}
