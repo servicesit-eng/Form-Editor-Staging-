@@ -18,7 +18,7 @@
     const params = (e && e.parameter) || {};
     if (!params.action) {
       const out = ContentService.createTextOutput(JSON.stringify({
-        ok: true, service: 'Dontum e-Form API', mode: 'api-only', actions: 37, time: new Date().toISOString()
+        ok: true, service: 'Dontum e-Form API', mode: 'api-only', actions: 36, time: new Date().toISOString()
       }));
       out.setMimeType(ContentService.MimeType.JSON);
       return out;
@@ -46,7 +46,6 @@
         case 'lookupSubmissionsByCitizenId': result = lookupSubmissionsByCitizenId(payload.citizenId); break;
         case 'getPublicFormSubmission': result = getPublicFormSubmission(payload.id, payload.citizenId); break;
         case 'getHeaderLogo': result = getHeaderLogo(); break;
-        case 'testSupabaseConnection': result = testSupabaseConnection(); break;
         case 'getSession': result = getSession(accessToken); break;
         case 'loginWithPassword': result = loginWithPassword(payload.email, payload.password); break;
         case 'loginWithCitizenId': result = loginWithCitizenId(payload.citizenId, payload.password); break;
@@ -104,7 +103,7 @@
     if (!id) throw new Error('ไม่ระบุรหัสฟอร์ม');
     const rows = supabaseRequest_('form_templates?id=eq.' + encodeURIComponent(id) + '&is_active=eq.true', 'get', null, null);
     if (!rows || !rows.length) throw new Error('ไม่พบฟอร์มหรือฟอร์มยังไม่เปิดใช้งาน');
-    const fields = supabaseRequest_('form_fields?template_id=eq.' + encodeURIComponent(id) + '&order=order_index.asc&limit=5000', 'get', null, null) || [];
+    const fields = supabaseRequest_('form_fields?template_id=eq.' + encodeURIComponent(id) + '&order=order_index.asc', 'get', null, null) || [];
     const compact = compactFields_(fields);
     return Object.assign({}, rows[0], { fields: compact.fields, staleFieldIds: compact.staleFieldIds });
   }
@@ -148,9 +147,9 @@
     const cid = String(citizenId || '').trim();
     if (!/^\d{13}$/.test(cid)) throw new Error('เลขบัตรประชาชนไม่ถูกต้อง (ต้องมี 13 หลัก)');
     const citizenHash = hashIdentifier_(cid);
-    const submissions = supabaseAdminRequest_('form_submissions?submitted_by_citizen_hash=eq.' + encodeURIComponent(citizenHash) + '&order=created_at.desc', 'get', null) || [];
+    const submissions = supabaseRequest_('form_submissions?submitted_by_citizen_hash=eq.' + encodeURIComponent(citizenHash) + '&order=created_at.desc', 'get', null, null) || [];
     return submissions.map(sub => {
-      const template = supabaseAdminRequest_('form_templates?id=eq.' + encodeURIComponent(sub.template_id) + '&select=id,name', 'get', null)[0];
+      const template = supabaseRequest_('form_templates?id=eq.' + encodeURIComponent(sub.template_id) + '&select=id,name', 'get', null, null)[0];
       return { id: sub.id, status: sub.status, created_at: sub.created_at,
         template_name: template ? template.name : 'ฟอร์มไม่ทราบชื่อ',
         referenceId: String(sub.id).slice(0, 8).toUpperCase() };
@@ -160,14 +159,14 @@
     const cid = String(citizenId || '').trim();
     if (!/^\d{13}$/.test(cid)) throw new Error('เลขบัตรประชาชนไม่ถูกต้อง');
     const citizenHash = hashIdentifier_(cid);
-    const rows = supabaseAdminRequest_('form_submissions?id=eq.' + encodeURIComponent(id), 'get', null);
+    const rows = supabaseRequest_('form_submissions?id=eq.' + encodeURIComponent(id), 'get', null, null);
     if (!rows || !rows.length) throw new Error('ไม่พบคำขอ');
     const sub = rows[0];
     if (sub.submitted_by_citizen_hash !== citizenHash) throw new Error('ไม่มีสิทธิ์ดูคำขอนี้ (เลขบัตรไม่ตรงกัน)');
-    const data = supabaseAdminRequest_('form_submission_data?submission_id=eq.' + encodeURIComponent(id), 'get', null) || [];
+    const data = supabaseRequest_('form_submission_data?submission_id=eq.' + encodeURIComponent(id), 'get', null, null) || [];
     const dataObj = {}; data.forEach(d => { dataObj[d.field_name] = d.field_value; });
-    const template = supabaseAdminRequest_('form_templates?id=eq.' + encodeURIComponent(sub.template_id), 'get', null)[0];
-    const fields = supabaseAdminRequest_('form_fields?template_id=eq.' + encodeURIComponent(sub.template_id) + '&order=order_index.asc&limit=5000', 'get', null) || [];
+    const template = supabaseRequest_('form_templates?id=eq.' + encodeURIComponent(sub.template_id), 'get', null, null)[0];
+    const fields = supabaseRequest_('form_fields?template_id=eq.' + encodeURIComponent(sub.template_id) + '&order=order_index.asc', 'get', null, null) || [];
     const compact = compactFields_(fields);
     return Object.assign({}, sub, { data: dataObj, template: template, fields: compact.fields, referenceId: String(sub.id).slice(0, 8).toUpperCase() });
   }
@@ -178,21 +177,17 @@
     const user = requireUser_(accessToken);
     const profile = supabaseRequest_('profiles?id=eq.' + encodeURIComponent(user.id) + '&select=id,full_name,role,active,must_change_password', 'get', null, accessToken)[0];
     if (!profile || profile.active !== true) throw new Error('บัญชีนี้ยังไม่ได้รับอนุญาต');
-    const role = String(profile.role || '').trim().toUpperCase();
-    return { id: user.id, email: user.email || '', fullName: profile.full_name, role: role, mustChangePassword: profile.must_change_password === true };
+    return { id: user.id, email: user.email || '', fullName: profile.full_name, role: profile.role, mustChangePassword: profile.must_change_password === true };
   }
   function loginWithPassword(email, password) {
     const cleanEmail = String(email || '').trim().toLowerCase();
     if (!cleanEmail || !password) throw new Error('กรุณากรอกอีเมลและรหัสผ่าน');
     const token = authPasswordToken_(cleanEmail, password);
     if (!token || !token.access_token) throw new Error('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
-    const userId = token.user && token.user.id;
-    if (!userId) throw new Error('Supabase Auth ไม่ส่งรหัสผู้ใช้กลับมา — ตรวจ deployment และการตั้งค่า Supabase');
-    const profile = supabaseRequest_('profiles?id=eq.' + encodeURIComponent(userId) + '&select=id,full_name,role,active,must_change_password', 'get', null, token.access_token)[0];
+    const profile = supabaseRequest_('profiles?id=eq.' + encodeURIComponent(token.user.id) + '&select=id,full_name,role,active,must_change_password', 'get', null, token.access_token)[0];
     if (!profile || profile.active !== true) throw new Error('บัญชีนี้ยังไม่ได้รับอนุญาต');
-    const role = String(profile.role || '').trim().toUpperCase();
-    if (role !== 'ADMIN') throw new Error('บัญชีนี้ไม่มีสิทธิ์ Admin');
-    return { accessToken: token.access_token, fullName: profile.full_name, role: role, mustChangePassword: profile.must_change_password === true };
+    if (profile.role !== 'ADMIN') throw new Error('บัญชีนี้ไม่มีสิทธิ์ Admin');
+    return { accessToken: token.access_token, fullName: profile.full_name, role: profile.role, mustChangePassword: profile.must_change_password === true };
   }
   function loginWithCitizenId(citizenId, password) {
     const id = String(citizenId || '').trim();
@@ -225,11 +220,6 @@
   function getHeaderLogo() {
     const logo = PropertiesService.getScriptProperties().getProperty(CONFIG.headerLogoProperty);
     return { ok: true, logo: logo || '' };
-  }
-  function testSupabaseConnection() {
-    getSupabasePublicConfig();
-    supabaseRequest_('form_templates?select=id&limit=1', 'get', null, null);
-    return { ok: true, service: 'supabase' };
   }
   function deleteHeaderLogo(accessToken) {
     requireAdmin_(accessToken);
@@ -265,24 +255,13 @@
   /* ---------- BUILDER ---------- */
   function getFormTemplates(accessToken) {
     requireAdmin_(accessToken);
-    const templates = supabaseRequest_('form_templates?order=created_at.desc', 'get', null, accessToken) || [];
-    if (!templates.length) return [];
-    const ids = templates.map(t => t.id).filter(Boolean);
-    const fields = ids.length
-      ? (supabaseRequest_('form_fields?template_id=in.(' + ids.map(encodeURIComponent).join(',') + ')&order=order_index.asc&limit=5000', 'get', null, accessToken) || [])
-      : [];
-    const byTemplate = {};
-    fields.forEach(f => { (byTemplate[f.template_id] = byTemplate[f.template_id] || []).push(f); });
-    return templates.map(t => {
-      const compact = compactFields_(byTemplate[t.id] || []);
-      return Object.assign({}, t, { fields: compact.fields, staleFieldIds: compact.staleFieldIds });
-    });
+    return supabaseRequest_('form_templates?order=created_at.desc', 'get', null, accessToken) || [];
   }
   function getFormTemplate(id, accessToken) {
     requireAdmin_(accessToken);
     const rows = supabaseRequest_('form_templates?id=eq.' + encodeURIComponent(id), 'get', null, accessToken);
     if (!rows || !rows.length) throw new Error('ไม่พบฟอร์ม');
-    const fields = supabaseRequest_('form_fields?template_id=eq.' + encodeURIComponent(id) + '&order=order_index.asc&limit=5000', 'get', null, accessToken) || [];
+    const fields = supabaseRequest_('form_fields?template_id=eq.' + encodeURIComponent(id) + '&order=order_index.asc', 'get', null, accessToken) || [];
     const compact = compactFields_(fields);
     return Object.assign({}, rows[0], { fields: compact.fields, staleFieldIds: compact.staleFieldIds });
   }
@@ -306,7 +285,7 @@
       name: name, description: (src.description || '') + ' [คัดลอกจาก: ' + src.name + ']', is_active: false, created_by: session.id
     }], accessToken);
     const nid = created[0].id;
-    const fields = supabaseRequest_('form_fields?template_id=eq.' + encodeURIComponent(id) + '&order=order_index.asc&limit=5000', 'get', null, accessToken) || [];
+    const fields = supabaseRequest_('form_fields?template_id=eq.' + encodeURIComponent(id) + '&order=order_index.asc', 'get', null, accessToken) || [];
     const compact = compactFields_(fields), sourceFields = compact.fields;
     if (sourceFields.length) {
       supabaseRequest_('form_fields', 'post', sourceFields.map((f, i) => ({
@@ -351,18 +330,10 @@
     requireAdmin_(accessToken);
     assertSafeId_(templateId);
     if (!Array.isArray(fields)) throw new Error('ข้อมูลฟิลด์ไม่ถูกต้อง');
-
-    /* Read the current rows first. This makes the save idempotent: a stale or
-       foreign UUID is never blindly patched and then inserted as a second row. */
-    const currentRows = supabaseRequest_('form_fields?template_id=eq.' + encodeURIComponent(templateId) + '&order=order_index.asc&limit=5000', 'get', null, accessToken) || [];
-    const currentCompact = compactFields_(currentRows);
     const compact = compactFields_(fields), sourceFields = compact.fields;
     if (sourceFields.length > MAX_FIELDS_) throw new Error('จำนวนฟิลด์เกินกำหนด (สูงสุด ' + MAX_FIELDS_ + ')');
     const name = String((meta && meta.name) || '').trim();
     if (!name) throw new Error('กรุณากรอกชื่อฟอร์ม');
-
-    const currentIds = Object.create(null);
-    currentRows.forEach(r => { const id = String(r && r.id || ''); if (isRealId_(id)) currentIds[id] = true; });
     const usedNames = Object.create(null);
     const clean = sourceFields.map((f, i) => {
       const row = sanitizeField_(f, i, usedNames);
@@ -370,27 +341,20 @@
       if (isUuid_(requestedId)) row.id = requestedId.toLowerCase();
       return row;
     });
-    const existing = [], created = [], keepIds = Object.create(null);
+    const existing = [], created = [];
     clean.forEach((row, i) => {
       const rawId = sourceFields[i].id == null ? '' : String(sourceFields[i].id);
-      if (isRealId_(rawId) && currentIds[rawId]) { existing.push({ id: rawId, row: row }); keepIds[rawId] = true; }
-      else created.push({ tmp: rawId, row: row });
+      if (isRealId_(rawId)) existing.push({ id: rawId, row: row }); else created.push({ tmp: rawId, row: row });
     });
-
     const del = [];
-    const addDelete = id => {
-      id = String(id || '');
-      if (!isRealId_(id) || keepIds[id] || del.indexOf(id) !== -1) return;
-      del.push(id);
-    };
-    (Array.isArray(deletedIds) ? deletedIds : []).concat(compact.staleFieldIds, currentCompact.staleFieldIds).forEach(addDelete);
-
+    (Array.isArray(deletedIds) ? deletedIds : []).concat(compact.staleFieldIds).map(String).filter(isRealId_).forEach(id => {
+      if (del.indexOf(id) === -1) del.push(id);
+    });
     const tplUpdate = { name: name, updated_at: new Date().toISOString() };
     if (meta && meta.description !== undefined) tplUpdate.description = String(meta.description || '').trim();
     if (meta && meta.is_active !== undefined) tplUpdate.is_active = meta.is_active === true;
     supabaseRequest_('form_templates?id=eq.' + encodeURIComponent(templateId), 'patch', [tplUpdate], accessToken);
-    deleteFieldRows_(templateId, del, accessToken);
-
+    if (del.length) supabaseRequest_('form_fields?template_id=eq.' + encodeURIComponent(templateId) + '&id=in.(' + del.map(encodeURIComponent).join(',') + ')', 'delete', null, accessToken);
     const patchResults = supabaseBatch_(existing.map(x => ({
       path: 'form_fields?id=eq.' + encodeURIComponent(x.id) + '&template_id=eq.' + encodeURIComponent(templateId), method: 'patch', body: [x.row]
     })), accessToken);
@@ -403,43 +367,18 @@
       const byOrder = {}; inserted.forEach(r => { byOrder[r.order_index] = r.id; });
       created.forEach(c => { const newId = byOrder[c.row.order_index]; if (newId === undefined) throw new Error('จับคู่ฟิลด์ใหม่ไม่สำเร็จ'); if (c.tmp) idMap[c.tmp] = String(newId); });
     }
-    return { ok: true, idMap: idMap, removedDuplicateFields: currentCompact.staleFieldIds.length + compact.staleFieldIds.length, deletedFieldIds: del };
-  }
-  function deleteFieldRows_(templateId, ids, accessToken) {
-    const list = Array.from(new Set((ids || []).map(String).filter(isRealId_))), chunkSize = 25;
-    for (let i = 0; i < list.length; i += chunkSize) {
-      const chunk = list.slice(i, i + chunkSize);
-      supabaseRequest_('form_fields?template_id=eq.' + encodeURIComponent(templateId) + '&id=in.(' + chunk.map(encodeURIComponent).join(',') + ')', 'delete', null, accessToken);
-    }
-  }
-  function compactFieldFingerprint_(f) {
-    let value = String(f && f.value || '');
-    if (value.length > 240) value = value.length + ':' + value.slice(0, 120) + ':' + value.slice(-120);
-    return JSON.stringify([f && f.field_type || '', f && f.label || '', value,
-      Array.isArray(f && f.options) ? f.options : [], f && f.required === true,
-      f && f.auto_grow === true, f && f.field_group || '', Number(f && f.pos_x || 0),
-      Number(f && f.pos_y || 0), Number(f && f.width || 0), Number(f && f.height || 0),
-      Number(f && f.font_size || 0), f && f.font_family || '', f && f.font_weight || '',
-      f && f.text_color || '', f && f.bg_color || '', f && f.border_style || '',
-      f && f.border_color || '', f && f.text_align || '']);
+    return { ok: true, idMap: idMap, removedDuplicateFields: compact.staleFieldIds.length, deletedFieldIds: del };
   }
   function compactFields_(fields) {
-    const out = [], seen = Object.create(null), seenNames = Object.create(null), seenFingerprints = Object.create(null), staleFieldIds = [];
+    const out = [], seen = Object.create(null);
     (Array.isArray(fields) ? fields : []).forEach(raw => {
       if (!raw || typeof raw !== 'object') return;
       const f = Object.assign({}, raw), id = String(f.id || '');
       if (id && seen[id]) return;
-      const name = String(f.name || '').trim().toLowerCase();
-      if (name && seenNames[name]) { if (isRealId_(id)) staleFieldIds.push(id); return; }
-      const fingerprint = compactFieldFingerprint_(f);
-      if (fingerprint && seenFingerprints[fingerprint]) { if (isRealId_(id)) staleFieldIds.push(id); return; }
-      if (out.length >= MAX_FIELDS_) { if (isRealId_(id)) staleFieldIds.push(id); return; }
       if (id) seen[id] = true;
-      if (name) seenNames[name] = true;
-      if (fingerprint) seenFingerprints[fingerprint] = true;
       out.push(f);
     });
-    return { fields: out, staleFieldIds: Array.from(new Set(staleFieldIds)) };
+    return { fields: out, staleFieldIds: [] };
   }
   function sanitizeField_(f, idx, seenNames) {
     if (!f || typeof f !== 'object') throw new Error('ข้อมูลฟิลด์ลำดับที่ ' + (idx + 1) + ' ไม่ถูกต้อง');
@@ -478,7 +417,7 @@
   function num_(v, min, max, def) { let n = Number(v); if (!isFinite(n)) n = def; return Math.round(Math.max(min, Math.min(max, n)) * 100) / 100; }
   function colorOr_(v, def, allowTransparent) { const s = String(v || ''); if (/^#[0-9a-fA-F]{6}$/.test(s)) return s; if (allowTransparent && s === 'transparent') return s; return def; }
   function isUuid_(id) { return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(id || '')); }
-  function isRealId_(id) { return isUuid_(id); }
+  function isRealId_(id) { return !!id && String(id).indexOf('tmp_') !== 0 && /^[A-Za-z0-9_-]+$/.test(String(id)); }
   function assertSafeId_(id) { if (!/^[A-Za-z0-9_-]+$/.test(String(id || ''))) throw new Error('รหัสไม่ถูกต้อง'); }
 
   /* ---------- RENDERER / SUBMISSIONS ---------- */
@@ -487,7 +426,7 @@
     requireUser_(accessToken);
     const rows = supabaseRequest_('form_templates?id=eq.' + encodeURIComponent(id) + '&is_active=eq.true', 'get', null, accessToken);
     if (!rows || !rows.length) throw new Error('ไม่พบฟอร์มหรือฟอร์มยังไม่เปิดใช้งาน');
-    const fields = supabaseRequest_('form_fields?template_id=eq.' + encodeURIComponent(id) + '&order=order_index.asc&limit=5000', 'get', null, accessToken) || [];
+    const fields = supabaseRequest_('form_fields?template_id=eq.' + encodeURIComponent(id) + '&order=order_index.asc', 'get', null, accessToken) || [];
     const compact = compactFields_(fields);
     return Object.assign({}, rows[0], { fields: compact.fields, staleFieldIds: compact.staleFieldIds });
   }
@@ -534,7 +473,7 @@
     const data = supabaseRequest_('form_submission_data?submission_id=eq.' + encodeURIComponent(id), 'get', null, accessToken) || [];
     const dataObj = {}; data.forEach(d => { dataObj[d.field_name] = d.field_value; });
     const template = supabaseRequest_('form_templates?id=eq.' + encodeURIComponent(sub.template_id), 'get', null, accessToken)[0];
-    const fields = supabaseRequest_('form_fields?template_id=eq.' + encodeURIComponent(sub.template_id) + '&order=order_index.asc&limit=5000', 'get', null, accessToken) || [];
+    const fields = supabaseRequest_('form_fields?template_id=eq.' + encodeURIComponent(sub.template_id) + '&order=order_index.asc', 'get', null, accessToken) || [];
     return Object.assign({}, sub, { data: dataObj, template: template, fields: fields });
   }
   function updateSubmissionStatus(id, status, accessToken) {
@@ -647,8 +586,7 @@
   function getSupabasePublicConfig() {
     const props = PropertiesService.getScriptProperties();
     const url = props.getProperty(CONFIG.supabaseUrlProperty), key = props.getProperty(CONFIG.publishableKeyProperty);
-    if (!url) throw new Error('ยังไม่ได้ตั้งค่า SUPABASE_URL ใน Script Properties');
-    if (!key) throw new Error('ยังไม่ได้ตั้งค่า SUPABASE_PUBLISHABLE_KEY ใน Script Properties');
+    if (!url || !key) throw new Error('ยังไม่ได้ตั้งค่า Supabase');
     return { url: url.replace(/\/$/, ''), publishableKey: key };
   }
   function authPasswordToken_(email, password) {
@@ -657,17 +595,8 @@
       method: 'post', headers: { apikey: config.publishableKey, 'Content-Type': 'application/json' },
       payload: JSON.stringify({ email: email, password: password }), muteHttpExceptions: true
     });
-    const status = response.getResponseCode();
-    let body = {};
-    try { body = JSON.parse(response.getContentText() || '{}'); } catch (e) { body = {}; }
-    if (status !== 200) {
-      const code = String(body.error_code || body.error || '').toLowerCase();
-      const description = String(body.error_description || body.msg || body.message || '').toLowerCase();
-      if (/email not confirmed|email_not_confirmed/.test(code + ' ' + description)) throw new Error('บัญชี Supabase ยังไม่ได้ยืนยันอีเมล');
-      if (/invalid_grant|invalid_credentials|invalid login credentials/.test(code + ' ' + description)) return null;
-      throw new Error('Supabase Auth เชื่อมต่อไม่ได้ (HTTP ' + status + ') — ตรวจ URL และ Publishable Key ใน GAS');
-    }
-    return body;
+    if (response.getResponseCode() !== 200) return null;
+    return JSON.parse(response.getContentText());
   }
   function hashIdentifier_(value) {
     return Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, value, Utilities.Charset.UTF_8)).replace(/=+$/, '');
