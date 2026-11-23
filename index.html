@@ -1643,6 +1643,10 @@ PQ.clear();var c=$('#canvas');
 if(c){var h=sheetH(S.b.fields.map(norm));c.style.height=h+'mm';c.dataset.sheetH=String(h);zoomSheet(c,S.b.zoom||1)}
 decorate()})}
 function repaint(){paintSheet('#canvas',S.b.fields,'design',{});zoomSheet($('#canvas'),S.b.zoom||1);decorate();renderLayers()}
+function normalizeGroupOrder(fields){var src=fields||[],out=[],seen={},changed=false;
+src.forEach(function(f){var g=String(f&&f.field_group||'').trim();if(!g){out.push(f);return}if(seen[g])return;seen[g]=1;src.forEach(function(x){if(String(x&&x.field_group||'').trim()===g)out.push(x)})});
+for(var i=0;i<src.length;i++)if(src[i]!==out[i]){changed=true;break}
+if(changed){Array.prototype.splice.apply(src,[0,src.length].concat(out))}return changed}
 function renderLayers(){var L=$('#layers');if(!L)return;var F=layoutFlags(),fields=S.b.fields;
 var clip=new Set(F.clip.map(function(x){return x.id})),sections=[];
 fields.forEach(function(f,i){var group=String(f.field_group||'').trim(),section=null;
@@ -1656,11 +1660,7 @@ return '<div class="layer'+((S.b.selIds||[]).indexOf(f.id)>=0||S.b.sel===f.id?' 
 (clip.has(f.id)||F.ov.has(f.id)?'<span class="warn">'+ic('warn',12)+'</span>':'')+
 '<button class="lx" data-lx="'+esc(f.id)+'">'+ic('x',12)+'</button></div>'}).join('')}).join('')||
 '<p style="font-size:12px;color:var(--tx3);padding:8px">ยังไม่มีฟิลด์ — ลากจากกล่องด้านบน</p>';
-var dragId=null;
-function normalizeGroupOrder(fields){var src=fields||[],out=[],seen={},changed=false;
-src.forEach(function(f){var g=String(f&&f.field_group||'').trim();if(!g){out.push(f);return}if(seen[g])return;seen[g]=1;src.forEach(function(x){if(String(x&&x.field_group||'').trim()===g)out.push(x)})});
-for(var i=0;i<src.length;i++)if(src[i]!==out[i]){changed=true;break}
-if(changed){Array.prototype.splice.apply(src,[0,src.length].concat(out))}return changed}
+ var dragId=null;
 function dropField(id,targetId,targetGroup,after){var b=S.b;
 normalizeGroupOrder(b.fields);var from=b.fields.map(function(f){return f.id}).indexOf(id);if(from<0)return;
 var moving=b.fields[from],oldGroup=String(moving.field_group||'').trim(),movingIds=oldGroup?b.fields.filter(function(f){return String(f.field_group||'').trim()===oldGroup}).map(function(f){return f.id}):[id],movingSet={};movingIds.forEach(function(x){movingSet[x]=1});
