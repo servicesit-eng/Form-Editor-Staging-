@@ -1013,7 +1013,6 @@ toast('ส่งออก '+name+' แล้ว',{type:'ok'})}
 function modal(title,body,foot){$('#modalTitle').textContent=title;$('#modalBody').innerHTML=body;$('#modalFoot').innerHTML=foot||'';$('#modalScrim').hidden=false;
 $$('[data-close-modal]',$('#modalScrim')).forEach(function(b){b.onclick=closeModal})}
 function closeModal(){$('#modalScrim').hidden=true}
-function showSaveNextStepModal(){modal('ขั้นตอนถัดไป','<p>รบกวนปริ้นเอกสารเพื่อนำส่งฝ่ายบุคคลเป็นลำดับถัดไป</p>','<button class="btn pri" data-close-modal>รับทราบ</button>')}
 $('#modalScrim').onclick=function(e){if(e.target.id==='modalScrim')closeModal()};
 $('#helpScrim').onclick=function(e){if(e.target.id==='helpScrim')$('#helpScrim').hidden=true};
 function openDrawer(kicker,title,body,foot){$('#drawerKicker').textContent=kicker;$('#drawerTitle').textContent=title;
@@ -1870,7 +1869,7 @@ if(S.sec==='builder'&&S.b.id===t.id){repaint();renderControls();paintBadges()}
 if(!auto&&stillDeleted.length)toast('บันทึกเลย์เอาต์แล้ว เหลือรายการซ้ำที่ต้องล้างอีก '+stillDeleted.length+' รายการ — กดบันทึกซ้ำได้',{type:'warn',ms:7000});
 if(!auto&&isActive)return rawApi('publishFormTemplate',{id:tid,isActive:isActive},true,{timeout:30000});return null})
 .then(function(){var st=$('#saveState');if(!b.dirty&&st){st.className='ss saved';st.innerHTML=ic('check',13)+'บันทึกแล้ว · ผู้ใช้ใช้งานได้'}
- if(!auto&&!b.dirty){toast('บันทึก '+t.name+' แล้ว — ผู้ใช้ใช้งานได้ทันที',{type:'ok'});showSaveNextStepModal()}return null})
+ if(!auto&&!b.dirty){toast('บันทึก '+t.name+' แล้ว — ผู้ใช้ใช้งานได้ทันที',{type:'ok'})}return null})
 .catch(function(e){var s2=$('#saveState'),msg=String(e&&e.message||e);
 if(layoutSaved&&!retryAfter){b.dirty=false;b.serverUpdatedAt=t.updated_at;delete DB.drafts[oldId];delete DB.drafts[tid];persist();if(s2){s2.className='ss saved';s2.innerHTML=ic('warn',13)+'บันทึกแล้ว แต่เผยแพร่ไม่สำเร็จ'} }
 else{b.dirty=true;b.serverUpdatedAt=layoutSaved?t.updated_at:serverBase;writeDraftNow();if(s2){s2.className='ss dirty';s2.innerHTML=ic('warn',13)+'ส่งไม่สำเร็จ (ร่างยังอยู่ในเครื่อง)'}}
