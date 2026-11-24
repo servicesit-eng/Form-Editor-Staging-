@@ -409,7 +409,9 @@ textarea.fin{min-height:110px;resize:vertical}
 .okh{text-align:center;padding:48px 20px}
 .okh .oi{width:76px;height:76px;margin:0 auto 16px;border-radius:50%;display:grid;place-items:center;color:#fff;background:linear-gradient(145deg,var(--em),#059669);box-shadow:0 12px 34px rgba(16,185,129,.34);animation:pop .5s var(--ez)}
 @keyframes pop{0%{transform:scale(.5);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1)}}
-.okh h2{font-size:24px;margin-bottom:6px}
+ .okh h2{font-size:24px;margin-bottom:6px}
+ .save-next-banner{max-width:720px;margin:14px auto 0;padding:14px 18px;display:flex;align-items:flex-start;gap:10px;text-align:left;border:2px solid var(--p6);border-radius:var(--r3);background:linear-gradient(145deg,var(--sf2),var(--sf));box-shadow:var(--s1);color:var(--tx)}
+ .save-next-banner>span{font-size:20px;line-height:1.2}.save-next-banner b{display:block;color:var(--p6);font-size:14px;margin-bottom:3px}.save-next-banner p{margin:0;font-size:14px;font-weight:700;line-height:1.5}
 .refbox{display:inline-flex;align-items:center;gap:11px;font-family:var(--mo);font-size:26px;font-weight:600;letter-spacing:.16em;padding:12px 22px;border-radius:var(--r3);border:2px dashed var(--p4);background:var(--sf2);margin:16px 0}
 .okact{display:flex;gap:9px;justify-content:center;margin-top:20px;flex-wrap:wrap}
 #probe{position:fixed;left:-99999px;top:0;width:210mm;pointer-events:none;opacity:0;z-index:-1}
@@ -539,7 +541,8 @@ html,body{margin:0;padding:0;font-family:'Noto Sans Thai','Sarabun',sans-serif;c
 <section class="pv" id="pvOk"><div class="okh"><div class="oi" id="okIco"></div><h2>ส่งคำขอเรียบร้อยแล้ว</h2>
 <p id="okName" style="color:var(--tx2)"></p>
 <div class="refbox"><span id="okRef">------</span><button class="btn sm ic" id="okCopy"></button></div>
-<p style="font-size:12.5px;color:var(--tx3)">เก็บเลขอ้างอิงนี้ไว้ตรวจสอบสถานะและพิมพ์เอกสาร</p>
+ <p style="font-size:12.5px;color:var(--tx3)">เก็บเลขอ้างอิงนี้ไว้ตรวจสอบสถานะและพิมพ์เอกสาร</p>
+ <div class="save-next-banner" role="alert" aria-live="assertive"><span aria-hidden="true">📌</span><div><b>ขั้นตอนถัดไป</b><p>รบกวนปริ้นเอกสารเพื่อนำส่งฝ่ายบุคคลเป็นลำดับถัดไป</p></div></div>
 <div class="okact"><button class="btn pri" id="okPrint">🖨️ พิมพ์เอกสาร</button><button class="btn" id="okDl">📥 ดาวน์โหลด HTML</button><button class="btn" id="okStatus">🔍 ตรวจสอบคำขอ</button><button class="btn" id="okHome">🏠 กลับหน้าแรก</button></div></div></section>
 <section class="pv" id="pvStatus">
 <div class="psh"><h2>ตรวจสอบคำขอของฉัน</h2><p>กรอกเลขบัตรประชาชน 13 หลักที่ใช้ยื่นคำขอ</p></div>
@@ -593,7 +596,7 @@ html,body{margin:0;padding:0;font-family:'Noto Sans Thai','Sarabun',sans-serif;c
 <script>
 'use strict';
 var NL=String.fromCharCode(10),CR=String.fromCharCode(13),CRLF=CR+NL,TAB=String.fromCharCode(9),DQ=String.fromCharCode(34),BSL=String.fromCharCode(92),BOMC=String.fromCharCode(0xFEFF);
-var API='https://script.google.com/macros/s/AKfycbx_6HLauzKZxlv8qg7OL7DnYU8mztWhLOhLxEeBK0M7GyXBmOK-3Vkq-QySFxUouSGelw/exec';
+var API='https://script.google.com/macros/s/AKfycbwlBmF7UCDh1b-DlGy6uzT_Vot2J0Z02EoLoCRm5XFjtra1nDzCBD-cBHJ_8Yl6hX6oig/exec';
 var KEY='dontum.v8',TOK='dontum_token_v8',OBX='dontum.outbox.v8',CCH='dontum.cache.v8';
 var $=function(s,r){return (r||document).querySelector(s)};
 var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
@@ -756,7 +759,7 @@ function enqueue(action,payload,label){if(!token)return;try{guard(payload)}catch
 QUEUE.push({id:uid('job_'),action:action,payload:payload,label:label||action,tries:0,next:0});qSave();paintConn();pump()}
 function pump(){while(NET.active<2){var job=QUEUE.filter(function(j){return j.next<=Date.now()})[0];if(!job)break;
 NET.active++;job.next=Date.now()+30000;paintConn();
-rawApi(job.action,job.payload,true).then(function(){QUEUE=QUEUE.filter(function(j){return j.id!==job.id});invalidate()})
+ rawApi(job.action,job.payload,true).then(function(){QUEUE=QUEUE.filter(function(j){return j.id!==job.id});invalidate()})
  .catch(function(e){var fkDelete=job.action==='deleteFormTemplate'&&/23503|foreign key|form_submissions_template_id_fkey/i.test(e&&e.message||'');
  if(fkDelete){QUEUE=QUEUE.filter(function(j){return j.id!==job.id});invalidate('getFormTemplates');if(token)syncAdmin().catch(function(){});
  toast('ลบฟอร์มไม่ได้ เพราะมีคำขอที่ผูกกับฟอร์มแล้ว — ให้ปิดรับกรอกแทน',{type:'warn',ms:7000});return}
@@ -1009,6 +1012,7 @@ toast('ส่งออก '+name+' แล้ว',{type:'ok'})}
 function modal(title,body,foot){$('#modalTitle').textContent=title;$('#modalBody').innerHTML=body;$('#modalFoot').innerHTML=foot||'';$('#modalScrim').hidden=false;
 $$('[data-close-modal]',$('#modalScrim')).forEach(function(b){b.onclick=closeModal})}
 function closeModal(){$('#modalScrim').hidden=true}
+function showSaveNextStepModal(){modal('ขั้นตอนถัดไป','<p>รบกวนปริ้นเอกสารเพื่อนำส่งฝ่ายบุคคลเป็นลำดับถัดไป</p>','<button class="btn pri" data-close-modal>รับทราบ</button>')}
 $('#modalScrim').onclick=function(e){if(e.target.id==='modalScrim')closeModal()};
 $('#helpScrim').onclick=function(e){if(e.target.id==='helpScrim')$('#helpScrim').hidden=true};
 function openDrawer(kicker,title,body,foot){$('#drawerKicker').textContent=kicker;$('#drawerTitle').textContent=title;
@@ -1169,7 +1173,7 @@ rawApi('submitFormAnonymous',{templateId:S.fill.tpl,formData:data,citizenId:cid,
 .then(function(res){var row=DB.submissions.filter(function(x){return x.id===lid})[0];
 if(row&&res){row.id=String(res.id||lid).toLowerCase();row.referenceId=res.referenceId||rid;delete row._pending;
 S.lastSub.id=row.id;S.lastSub.referenceId=row.referenceId;$('#okRef').textContent=row.referenceId;persist();paintCounts()}
-invalidate('getFormSubmissions');toast('ส่งคำขอเข้าเซิร์ฟเวอร์แล้ว',{type:'ok'})})
+ invalidate('getFormSubmissions');toast('ส่งคำขอเข้าเซิร์ฟเวอร์แล้ว',{type:'ok'})})
 .catch(function(er){setConn('bad',er.message);toast('ส่งไม่สำเร็จ: '+er.message+' — จะลองใหม่อัตโนมัติ',{type:'bad',ms:7000});
 QUEUE.push({id:uid('job_'),action:'submitFormAnonymous',payload:{templateId:S.fill.tpl,formData:data,citizenId:cid,fullName:name},label:'ส่งคำขอ #'+rid,tries:0,next:Date.now()+3000});
 qSave();paintConn();pump()})
@@ -1867,7 +1871,7 @@ if(S.sec==='builder'&&S.b.id===t.id){repaint();renderControls();paintBadges()}
 if(!auto&&stillDeleted.length)toast('บันทึกเลย์เอาต์แล้ว เหลือรายการซ้ำที่ต้องล้างอีก '+stillDeleted.length+' รายการ — กดบันทึกซ้ำได้',{type:'warn',ms:7000});
 if(!auto&&isActive)return rawApi('publishFormTemplate',{id:tid,isActive:isActive},true,{timeout:30000});return null})
 .then(function(){var st=$('#saveState');if(!b.dirty&&st){st.className='ss saved';st.innerHTML=ic('check',13)+'บันทึกแล้ว · ผู้ใช้ใช้งานได้'}
-if(!auto&&!b.dirty)toast('บันทึก '+t.name+' แล้ว — ผู้ใช้ใช้งานได้ทันที',{type:'ok'});return null})
+ if(!auto&&!b.dirty){toast('บันทึก '+t.name+' แล้ว — ผู้ใช้ใช้งานได้ทันที',{type:'ok'});showSaveNextStepModal()}return null})
 .catch(function(e){var s2=$('#saveState'),msg=String(e&&e.message||e);
 if(layoutSaved&&!retryAfter){b.dirty=false;b.serverUpdatedAt=t.updated_at;delete DB.drafts[oldId];delete DB.drafts[tid];persist();if(s2){s2.className='ss saved';s2.innerHTML=ic('warn',13)+'บันทึกแล้ว แต่เผยแพร่ไม่สำเร็จ'} }
 else{b.dirty=true;b.serverUpdatedAt=layoutSaved?t.updated_at:serverBase;writeDraftNow();if(s2){s2.className='ss dirty';s2.innerHTML=ic('warn',13)+'ส่งไม่สำเร็จ (ร่างยังอยู่ในเครื่อง)'}}
