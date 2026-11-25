@@ -597,7 +597,7 @@ html,body{margin:0;padding:0;font-family:'Noto Sans Thai','Sarabun',sans-serif;c
 <script>
 'use strict';
 var NL=String.fromCharCode(10),CR=String.fromCharCode(13),CRLF=CR+NL,TAB=String.fromCharCode(9),DQ=String.fromCharCode(34),BSL=String.fromCharCode(92),BOMC=String.fromCharCode(0xFEFF);
-var API='https://script.google.com/macros/s/AKfycbx_6HLauzKZxlv8qg7OL7DnYU8mztWhLOhLxEeBK0M7GyXBmOK-3Vkq-QySFxUouSGelw/exec';
+var API='https://script.google.com/macros/s/AKfycbwlBmF7UCDh1b-DlGy6uzT_Vot2J0Z02EoLoCRm5XFjtra1nDzCBD-cBHJ_8Yl6hX6oig/exec';
 var KEY='dontum.v8',TOK='dontum_token_v8',OBX='dontum.outbox.v8',CCH='dontum.cache.v8';
 var $=function(s,r){return (r||document).querySelector(s)};
 var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
@@ -867,7 +867,7 @@ r.pos_x=clamp(mm(rx,PW),0,PW-w);r.pos_y=clamp(mm(ry,PH),0,PH-h);
 r.font_size=clamp(read(f.font_size,14).v,6,72);return r}
 function setStaleFieldIds(t,ids){var u=[],seen={};(ids||[]).forEach(function(id){id=String(id||'');if(id&&isUuid(id)&&!seen[id]){seen[id]=1;u.push(id)}});
 try{Object.defineProperty(t,'_staleFieldIds',{value:u,writable:true,configurable:true,enumerable:false})}catch(e){t._staleFieldIds=u}return u}
-function fieldFingerprint(f){return JSON.stringify([f&&f.field_type||'',f&&f.label||'',String(f&&f.value||''),Array.isArray(f&&f.options)?f.options:[],f&&f.required===true,f&&f.auto_grow===true,f&&f.field_group||'',Number(f&&f.pos_x||0),Number(f&&f.pos_y||0),Number(f&&f.width||0),Number(f&&f.height||0),Number(f&&f.font_size||0),f&&f.font_family||'',f&&f.font_weight||'',f&&f.text_color||'',f&&f.bg_color||'',f&&f.border_style||'',f&&f.border_color||'',f&&f.text_align||''])}
+function fieldFingerprint(f){return JSON.stringify([f&&f.field_type||'',f&&f.label||'',String(f&&f.value||''),Array.isArray(f&&f.options)?f.options:[],f&&f.required===true,f&&f.auto_grow===true,f&&f.field_group||'',Number(f&&f.pos_x||0),Number(f&&f.pos_y||0),Number(f&&f.width||0),Number(f&&f.height||0),Number(f&&f.font_size||0),f&&f.font_family||'',f&&f.font_weight||'',f&&f.text_color||'',f&&f.bg_color||'',f&&f.border_style||'',f&&f.border_color||'',f&&f.text_align||'',f&&f.default_value||'',f&&f.placeholder||'',f&&f.css_class||''])}
 function dedupeFields(fields){var out=[],byId=Object.create(null),byName=Object.create(null),byFp=Object.create(null),stale=[];
 (fields||[]).forEach(function(raw){if(!raw||typeof raw!=='object')return;
 var f=norm(raw),id=String(f.id||''),real=isUuid(id),name=String(f.name||'').trim().toLowerCase(),fp=fieldFingerprint(f);
@@ -1160,22 +1160,24 @@ if(S.fill.mode==='paper')Object.assign(S.fill.data,collectFill($('#fillCanvas'),
 var e=validateFill();
 if(Object.keys(e).length){markErrors();focusErr();toast(e[Object.keys(e)[0]],{type:'warn'});return}
 if(!isUuid(S.fill.tpl)){toast('ฟอร์มร่างยังส่งจริงไม่ได้ — ให้ผู้ดูแลบันทึกและเผยแพร่ก่อน',{type:'warn'});return}
-var t=tpl(S.fill.tpl),data=Object.assign({},S.fill.data),btn=$('#fillSend'),oldText=btn.textContent;
-btn.disabled=true;btn.textContent='กำลังส่งคำขอ…';
-rawApi('submitFormAnonymous',{templateId:S.fill.tpl,formData:data,citizenId:cid,fullName:name},false,{timeout:30000})
-.then(function(res){if(!res||!isUuid(res.id))throw new Error('เซิร์ฟเวอร์ไม่ยืนยันรหัสคำขอ');
-var id=String(res.id).toLowerCase(),rid=res.referenceId||id.slice(0,8).toUpperCase(),submittedAt=res.submittedAt||new Date().toISOString();
-S.lastSub={id:id,referenceId:rid,cid:cid,templateName:t?t.name:'',fields:S.fill.fields,data:data};
-DB.submissions.unshift({id:id,_cid:cid,template_id:S.fill.tpl,template_name:t?t.name:'',submitted_by_name:name,
-department:data.department||'',status:'SUBMITTED',created_at:submittedAt,archived_at:null,referenceId:rid,data:data});
+var t=tpl(S.fill.tpl),data=Object.assign({},S.fill.data),lid=uid('sub_'),rid=refOf({id:lid});
+S.lastSub={id:lid,referenceId:rid,cid:cid,templateName:t?t.name:'',fields:S.fill.fields,data:data};
+DB.submissions.unshift({id:lid,_cid:cid,template_id:S.fill.tpl,template_name:t?t.name:'',submitted_by_name:name,
+department:data.department||'',status:'SUBMITTED',created_at:new Date().toISOString(),archived_at:null,referenceId:rid,data:data,_pending:true});
 persist();paintCounts();
-$('#okName').textContent=(t?t.name:'')+' · ส่งเมื่อ '+fdate(submittedAt);
+$('#okName').textContent=(t?t.name:'')+' · ส่งเมื่อ '+fdate(new Date().toISOString());
 $('#okRef').textContent=rid;showPub('ok');history.replaceState(null,'','#/');
-logAct('คำขอใหม่ #'+rid+' — '+(t?t.name:''),'info');invalidate('getFormSubmissions');
-toast('บันทึกคำขอเรียบร้อยแล้ว',{type:'ok'})})
-.catch(function(er){setConn('bad',er.message);
-toast('ส่งคำขอไม่สำเร็จ: '+er.message+' — ข้อมูลยังอยู่ในฟอร์ม กรุณาลองใหม่',{type:'bad',ms:8000});paintConn()})
-.then(function(){btn.disabled=false;btn.textContent=oldText})}
+logAct('คำขอใหม่ #'+rid+' — '+(t?t.name:''),'info');
+var btn=$('#fillSend');btn.disabled=true;
+rawApi('submitFormAnonymous',{templateId:S.fill.tpl,formData:data,citizenId:cid,fullName:name},false,{timeout:30000})
+.then(function(res){var row=DB.submissions.filter(function(x){return x.id===lid})[0];
+if(row&&res){row.id=String(res.id||lid).toLowerCase();row.referenceId=res.referenceId||rid;delete row._pending;
+S.lastSub.id=row.id;S.lastSub.referenceId=row.referenceId;$('#okRef').textContent=row.referenceId;persist();paintCounts()}
+ invalidate('getFormSubmissions');toast('ส่งคำขอเข้าเซิร์ฟเวอร์แล้ว',{type:'ok'})})
+.catch(function(er){setConn('bad',er.message);toast('ส่งไม่สำเร็จ: '+er.message+' — จะลองใหม่อัตโนมัติ',{type:'bad',ms:7000});
+QUEUE.push({id:uid('job_'),action:'submitFormAnonymous',payload:{templateId:S.fill.tpl,formData:data,citizenId:cid,fullName:name},label:'ส่งคำขอ #'+rid,tries:0,next:Date.now()+3000});
+qSave();paintConn();pump()})
+.then(function(){btn.disabled=false})}
 function lookupStatus(cid){if(!/^[0-9]{13}$/.test(cid)){toast('กรุณากรอกเลขบัตรประชาชน 13 หลัก',{type:'warn'});return}
 var box=$('#stList');
 var paint=function(rows){box.innerHTML=rows.length?rows.map(function(s,i){
@@ -1331,6 +1333,23 @@ S.b.id=null;S.b.fields=[];S.sec=null;persist();
 if(S.shell==='admin')render();else routePublic();
 toast('กำลังดึงข้อมูลใหม่…',{type:'info',ms:1600});
 testConn(true).then(syncPublic).then(function(){if(token&&S.shell==='admin')syncAdmin()})}}
+function exportTemplateJson(id){if(!isUuid(id)||!token){toast('กรุณาเข้าสู่ระบบผู้ดูแลก่อนส่งออก',{type:'warn'});return}
+ rawApi('exportFormTemplate',{id:id},true,{timeout:40000}).then(function(bundle){var blob=new Blob([JSON.stringify(bundle,null,2)],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+ var base=String(bundle.template&&bundle.template.name||'form').replace(/[\\/:*?"<>|]+/g,'_').slice(0,80)||'form';a.href=url;a.download=base+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url)},1000);toast('ส่งออก '+base+' แล้ว',{type:'ok'})})
+ .catch(function(e){toast('ส่งออกฟอร์มไม่สำเร็จ: '+e.message,{type:'bad',ms:7000})})}
+function chooseTemplateImport(){if(!token){toast('กรุณาเข้าสู่ระบบผู้ดูแลก่อนนำเข้า',{type:'warn'});return}
+ var input=document.createElement('input');input.type='file';input.accept='.json,application/json';input.onchange=function(){if(input.files&&input.files[0])readTemplateImport(input.files[0])};input.click()}
+function readTemplateImport(file){if(file.size>3000000){toast('ไฟล์ใหญ่เกิน 3 MB',{type:'bad'});return}
+ var reader=new FileReader();reader.onerror=function(){toast('อ่านไฟล์ไม่สำเร็จ',{type:'bad'})};reader.onload=function(){var bundle;try{bundle=JSON.parse(String(reader.result||''))}catch(e){toast('ไฟล์ JSON ไม่ถูกต้อง',{type:'bad'});return}
+ if(!bundle||bundle.format!=='dontum-form-template'||bundle.formatVersion!==1||!bundle.template||!Array.isArray(bundle.fields)){toast('ไฟล์นี้ไม่ใช่แพ็กเกจแม่แบบฟอร์มที่รองรับ',{type:'bad'});return}
+ var srcName=String(bundle.template.name||'').trim();if(!srcName){toast('ไฟล์ไม่มีชื่อฟอร์ม',{type:'bad'});return}
+ var suggested=(srcName+' (นำเข้า)').slice(0,120);
+ modal('นำเข้าแม่แบบฟอร์ม','<p style="font-size:13px">ตรวจสอบก่อนนำเข้า ระบบจะสร้างฉบับร่างใหม่และเก็บฟอร์มเดิมไว้</p><div class="fld" style="margin-top:12px"><label>ชื่อฟอร์มใหม่</label><input id="imName" maxlength="120" value="'+esc(suggested)+'"></div><div class="note">'+esc(srcName)+' · '+bundle.fields.length+' ฟิลด์ · กระดาษ '+Number(bundle.template.page_width_mm||210)+' × '+Number(bundle.template.page_height_mm||297)+' มม.</div>',
+ '<button class="btn" data-close-modal>ยกเลิก</button><button class="btn pri" id="imGo">นำเข้าเป็นฉบับร่าง</button>');
+ $('#imName').focus();$('#imName').select();$('#imGo').onclick=function(){var name=$('#imName').value.trim();if(!name){toast('กรุณาระบุชื่อฟอร์ม',{type:'warn'});return}var btn=$('#imGo');btn.disabled=true;btn.textContent='กำลังนำเข้า…';
+ rawApi('importFormTemplate',{bundle:bundle,newName:name},true,{timeout:60000}).then(function(res){closeModal();invalidate('getFormTemplate');invalidate('getFormTemplates');toast('นำเข้า '+res.name+' แล้ว ('+res.fieldsCount+' ฟิลด์) — บันทึกเป็นฉบับร่าง',{type:'ok',ms:5000});return syncAdmin().then(function(){openBuilder(res.id)})})
+ .catch(function(e){btn.disabled=false;btn.textContent='นำเข้าเป็นฉบับร่าง';toast('นำเข้าไม่สำเร็จ: '+e.message,{type:'bad',ms:8000})})}}
+ reader.readAsText(file)}
 function vForms(v){var f=S.forms;
 var list=DB.templates.filter(function(t){
 if(f.fav&&DB.favorites.indexOf(t.id)<0)return false;
@@ -1342,7 +1361,7 @@ return true});
 list.sort(function(a,b){return f.sort==='name'?a.name.localeCompare(b.name,'th'):
 f.sort==='count'?DB.submissions.filter(function(s){return s.template_id===b.id}).length-DB.submissions.filter(function(s){return s.template_id===a.id}).length:
 new Date(b.updated_at)-new Date(a.updated_at)});
-v.innerHTML=head('forms',resyncBtn+'<button class="btn" data-a="csv">'+ic('csv')+'CSV</button><button class="btn pri" data-a="new">'+ic('plus')+'สร้างฟอร์มใหม่</button>')+
+v.innerHTML=head('forms',resyncBtn+'<button class="btn" data-a="importJson">'+ic('upload',13)+'นำเข้า JSON</button><button class="btn" data-a="csv">'+ic('csv')+'CSV</button><button class="btn pri" data-a="new">'+ic('plus')+'สร้างฟอร์มใหม่</button>')+
 '<div class="toolbar"><div class="search">'+ic('search')+'<input id="fq" value="'+esc(f.q)+'" placeholder="ค้นหาชื่อฟอร์ม / หน่วยงาน…"><kbd>/</kbd></div>'+
 '<select class="sel" id="fstatus"><option value="all">สถานะผู้ใช้ทั้งหมด</option><option value="active"'+(f.status==='active'?' selected':'')+'>ผู้ใช้กรอกได้</option><option value="draft"'+(f.status==='draft'?' selected':'')+'>ยังไม่เปิดให้ผู้ใช้</option></select>'+ 
 '<select class="sel" id="fdept"><option value="all">ทุกหน่วยงาน</option>'+DEPTS.map(function(d){return '<option'+(f.dept===d?' selected':'')+'>'+esc(d)+'</option>'}).join('')+'</select>'+
@@ -1357,7 +1376,7 @@ $('#fdept').onchange=function(e){f.dept=e.target.value;render()};
 $('#fsort').onchange=function(e){f.sort=e.target.value;render()};
 v.onclick=function(e){var a=e.target.closest('[data-a]'),row=e.target.closest('[data-id]');
 if(a){var k=a.dataset.a,id=a.dataset.id||(row&&row.dataset.id);
-if(k==='resync')return hardResync();if(k==='new')return newForm();
+if(k==='resync')return hardResync();if(k==='new')return newForm();if(k==='importJson')return chooseTemplateImport();if(k==='exportJson')return exportTemplateJson(id);
 if(k==='csv')return csv([['ชื่อฟอร์ม','หน่วยงาน','สถานะ','ฟิลด์','คำขอ','แก้ไขล่าสุด']].concat(list.map(function(t){
 return [t.name,t.department,t.is_active?'เปิดใช้งาน':'ฉบับร่าง',(t.fields||[]).length,DB.submissions.filter(function(s){return s.template_id===t.id}).length,fdate(t.updated_at)]})),'dontum-forms.csv');
 if(k==='fav'){f.fav=!f.fav;return render()}
@@ -1378,8 +1397,8 @@ return '<article class="card" data-id="'+esc(t.id)+'" style="animation-delay:'+M
 '<div class="pubstate '+(t.is_active?'open':'closed')+'"><span class="psdot"></span><div><b>'+(t.is_active?'ผู้ใช้สามารถกรอกได้':'ผู้ใช้ยังใช้งานไม่ได้')+'</b><small>'+(t.is_active?'ฟอร์มกำลังเปิดรับ':'ต้องเปิดให้ผู้ใช้กรอกก่อน')+'</small></div><button class="btn sm pubtoggle" data-a="pub" data-id="'+esc(t.id)+'">'+ic(t.is_active?'lock':'check',13)+(t.is_active?'ปิดรับกรอก':(isUuid(t.id)?'เปิดให้ผู้ใช้กรอก':'บันทึกก่อนเปิด'))+'</button></div>'+
 '<div class="cact"><button class="btn sm pri" data-a="fill" data-id="'+esc(t.id)+'">'+ic('edit',13)+'กรอก</button>'+ 
 '<button class="btn sm" data-a="edit" data-id="'+esc(t.id)+'">'+ic('builder',13)+'ออกแบบ</button>'+
-'<button class="btn sm ic" data-a="dup" data-id="'+esc(t.id)+'">'+ic('copy',13)+'</button>'+
-'<button class="btn sm ic" data-a="dl" data-id="'+esc(t.id)+'">'+ic('dl',13)+'</button>'+
+'<button class="btn sm ic" data-a="dup" data-id="'+esc(t.id)+'">'+ic('copy',13)+'</button>'+'<button class="btn sm ic" data-a="exportJson" data-id="'+esc(t.id)+'" title="ส่งออก JSON">'+ic('dl',13)+'</button>'+
+'<button class="btn sm ic" data-a="dl" data-id="'+esc(t.id)+'" title="ดาวน์โหลดฟอร์ม">'+ic('dl',13)+'</button>'+
 '<button class="btn sm ic" data-a="del" data-id="'+esc(t.id)+'">'+ic('trash',13)+'</button></div></article>'}).join('')+'</div>'}
 function formTable(list){return '<div class="tw"><div class="ts"><table><thead><tr><th style="width:34px"></th><th>ชื่อฟอร์ม</th><th>หน่วยงาน</th><th>ฟิลด์</th><th>คำขอ</th><th>สถานะผู้ใช้</th><th>แก้ไข</th><th></th></tr></thead><tbody>'+ 
 list.map(function(t){var n=DB.submissions.filter(function(s){return s.template_id===t.id}).length;
@@ -1387,7 +1406,7 @@ return '<tr data-id="'+esc(t.id)+'"><td><button class="star'+(DB.favorites.index
 '<td><b>'+esc(t.name)+'</b></td><td>'+esc(t.department)+'</td><td class="num">'+(t.fields||[]).length+'</td><td class="num">'+n+'</td>'+
 '<td><span class="pill '+(t.is_active?'on':'off')+'">'+(t.is_active?'ผู้ใช้กรอกได้':'ยังไม่เปิด')+'</span></td><td class="num">'+ago(t.updated_at)+'</td>'+ 
 '<td class="acts"><button class="btn sm" data-a="edit" data-id="'+esc(t.id)+'">ออกแบบ</button>'+ 
-'<button class="btn sm ic" data-a="dup" data-id="'+esc(t.id)+'">'+ic('copy',13)+'</button>'+
+'<button class="btn sm ic" data-a="dup" data-id="'+esc(t.id)+'">'+ic('copy',13)+'</button>'+'<button class="btn sm ic" data-a="exportJson" data-id="'+esc(t.id)+'" title="ส่งออก JSON">'+ic('dl',13)+'</button>'+
 '<button class="btn sm" data-a="pub" data-id="'+esc(t.id)+'">'+ic(t.is_active?'lock':'check',13)+(t.is_active?'ปิดรับ':'เปิดให้ผู้ใช้')+'</button>'+ 
 '<button class="btn sm ic" data-a="del" data-id="'+esc(t.id)+'">'+ic('trash',13)+'</button></td></tr>'}).join('')+'</tbody></table></div></div>'}
 function newForm(){modal('สร้างฟอร์มใหม่',
@@ -1828,7 +1847,7 @@ else if(map&&typeof map==='object')value=map[key];
 if((value===null||value===undefined)&&isUuid(key))value=key;if(value===null||value===undefined){var rows=res&&res.fields;if(Array.isArray(rows))value=rows[index];else if(rows&&typeof rows==='object')value=rows[key]}
 if(value&&typeof value==='object')value=value.id||value.field_id||value.fieldId||value.uuid;
 return fixUuid(value)}
-function apiField(f,id){return{id:id,field_type:String(f.field_type||''),name:String(f.name||''),label:String(f.label||''),value:String(f.value==null?'':f.value),options:Array.isArray(f.options)?f.options.map(String):[],required:f.required===true,auto_grow:f.auto_grow===true,pos_x:Number(f.pos_x)||0,pos_y:Number(f.pos_y)||0,width:Number(f.width)||0,height:Number(f.height)||0,font_size:Number(f.font_size)||14,font_family:String(f.font_family||'Noto Sans Thai'),font_weight:String(f.font_weight||'normal'),text_color:String(f.text_color||'#111111'),bg_color:String(f.bg_color||'transparent'),border_style:String(f.border_style||'none'),border_color:String(f.border_color||'#333333'),text_align:String(f.text_align||'left'),field_group:String(f.field_group||'')}}
+function apiField(f,id){return{id:id,field_type:String(f.field_type||''),name:String(f.name||''),label:String(f.label||''),value:String(f.value==null?'':f.value),options:Array.isArray(f.options)?f.options.map(String):[],required:f.required===true,auto_grow:f.auto_grow===true,pos_x:Number(f.pos_x)||0,pos_y:Number(f.pos_y)||0,width:Number(f.width)||0,height:Number(f.height)||0,font_size:Number(f.font_size)||14,font_family:String(f.font_family||'Noto Sans Thai'),font_weight:String(f.font_weight||'normal'),text_color:String(f.text_color||'#111111'),bg_color:String(f.bg_color||'transparent'),border_style:String(f.border_style||'none'),border_color:String(f.border_color||'#333333'),text_align:String(f.text_align||'left'),field_group:String(f.field_group||''),default_value:f.default_value==null?null:String(f.default_value),placeholder:f.placeholder==null?null:String(f.placeholder),css_class:f.css_class==null?null:String(f.css_class)}}
 function saveBuilder(auto){var b=S.b,t=tpl(b.id);if(!t||b.saving)return Promise.resolve();
 if(b.saveBlocked){toast('การบันทึกถูกหยุดไว้ชั่วคราว เพราะผลตอบกลับจากเซิร์ฟเวอร์ไม่แน่ชัด — ปิดแล้วเปิดฟอร์มใหม่ก่อนลองอีกครั้ง',{type:'warn',ms:8000});return Promise.resolve()}
 var creating=!isUuid(t.id);if(!creating&&b.remoteReady!==true){toast('ยังโหลดฟิลด์จากเซิร์ฟเวอร์ไม่ครบ จึงยกเลิกการบันทึกเพื่อป้องกันฟิลด์ซ้ำ',{type:'bad',ms:7000});return Promise.resolve()}
