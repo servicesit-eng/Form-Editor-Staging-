@@ -389,6 +389,26 @@ td.num{font-family:var(--mo);font-size:12px}td.acts{text-align:right;white-space
 .fpg .pb2{width:88px;height:7px;border-radius:99px;background:var(--sf3);overflow:hidden;border:1px solid var(--ln)}
 .fpg .pb2 i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--p5),var(--em));transition:width .3s}
 .fpg.done{color:var(--okT)}
+.fillStepper{display:flex;gap:8px;align-items:stretch;margin:0 0 14px;padding:10px;border:1px solid var(--ln);border-radius:var(--r3);background:var(--sf);box-shadow:var(--s1)}
+.fillStep{flex:1;min-width:0;display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:var(--r2);border:1px solid transparent;color:var(--tx3);font-size:12px;font-weight:750}
+.fillStep .n{width:25px;height:25px;display:grid;place-items:center;border-radius:50%;background:var(--sf3);font-family:var(--mo);flex:none}
+.fillStep.on{color:var(--p6);background:color-mix(in srgb,var(--cy) 10%,var(--sf));border-color:var(--p4)}
+.fillStep.done{color:var(--okT)}.fillStep.done .n{background:var(--ok);color:#fff}
+.fillStepTitle{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fillSubstep{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px;padding:9px 12px;border-radius:var(--r2);background:var(--sf2);color:var(--tx2);font-size:12px;font-weight:700}
+.fillReview{padding:16px;border:1px solid var(--ln);border-radius:var(--r3);background:var(--sf);box-shadow:var(--s1)}
+.fillReview h3{font-size:16px;margin:0 0 12px}.reviewGroup{margin-top:14px;border:1px solid var(--ln);border-radius:var(--r2);overflow:hidden}
+.reviewGroup header{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;background:var(--sf2);font-weight:800}
+.reviewGroup dl{display:grid;grid-template-columns:minmax(130px, .7fr) minmax(0,1.3fr);gap:0;margin:0}
+.reviewGroup dt,.reviewGroup dd{padding:9px 12px;margin:0;border-top:1px solid var(--ln);font-size:13px;overflow-wrap:anywhere}
+.reviewGroup dt{color:var(--tx2);font-weight:650}.reviewGroup dd{font-weight:700}
+.draftStatus{min-height:18px;text-align:center;color:var(--tx3);font-size:12px;margin-top:5px}
+.userStepRows{display:grid;gap:8px;max-height:55vh;overflow:auto}.userStepRow{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,.8fr);gap:12px;align-items:center;padding:9px 11px;border:1px solid var(--ln);border-radius:var(--r2);background:var(--sf2)}
+.userStepRow span{min-width:0;display:grid;gap:3px}.userStepRow b{font-size:12.5px}.userStepRow small{font:11px var(--mo);color:var(--tx3);overflow-wrap:anywhere}.userStepRow input{min-width:0;width:100%;border:1px solid var(--ln);border-radius:9px;padding:9px 10px;background:var(--sf);color:var(--tx)}
+.userPreviewNotice{padding:10px 12px;border-radius:var(--r2);background:color-mix(in srgb,var(--cy) 12%,var(--sf));border:1px solid var(--p4);font-size:12px;font-weight:750;color:var(--p6)}
+.adminUserPreviewPage{max-height:46vh;overflow:auto;padding:4px}.adminUserPreviewPage h4{margin:8px 2px;font-size:15px}.adminPreviewNav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px}.adminPreviewNav span{font-size:12px;color:var(--tx2);font-weight:700}
+.wizardActions{justify-content:space-between}.wizardActions .actLeft,.wizardActions .actRight{display:flex;gap:8px;flex-wrap:wrap}
+@media(max-width:640px){.fillStepper{gap:3px;padding:6px}.fillStep{justify-content:center;padding:7px 4px;font-size:10.5px}.fillStepTitle{white-space:normal;text-align:center}.fillStep .n{width:22px;height:22px}.reviewGroup dl{grid-template-columns:1fr}.reviewGroup dd{padding-top:0;border-top:0}.wizardActions{justify-content:center}.userStepRow{grid-template-columns:1fr}.adminPreviewNav{position:sticky;bottom:0;background:var(--sf);padding:8px 0}}
 .fzm{display:flex;gap:4px;align-items:center}
 .fwrap{border-radius:var(--r3);border:1px solid var(--ln);background:var(--sf3);padding:22px;overflow:auto;max-height:66vh;display:flex;justify-content:center}
 .fsimple{display:flex;flex-direction:column;gap:12px}
@@ -521,14 +541,15 @@ html,body{margin:0;padding:0;font-family:'Noto Sans Thai','Sarabun',sans-serif;c
 </section>
 <section class="pv" id="pvForms">
 <div class="psh" style="margin-top:8px"><h2>ฟอร์มทั้งหมด</h2><p>ค้นหาและเลือกแบบฟอร์มที่เปิดใช้งาน</p><span class="cpill" id="pfCount">—</span></div>
-<div class="toolbar"><div class="search"><span id="pfIco"></span><input id="pfSearch" placeholder="ค้นหาชื่อฟอร์ม / หน่วยงาน…"><kbd>/</kbd></div><button class="btn" id="pfReload">🔄 โหลดใหม่</button></div>
+<div class="toolbar"><div class="search"><span id="pfIco"></span><input id="pfSearch" placeholder="ค้นหาชื่อฟอร์ม / หน่วยงาน…"><kbd>/</kbd></div><button class="btn" id="pfResumeDraft">📝 กลับมากรอกต่อ</button><button class="btn" id="pfReload">🔄 โหลดใหม่</button></div>
 <div id="pfGrid" class="grid"></div>
 </section>
 <section class="pv" id="pvFill">
 <div class="psh"><h2 id="fillTitle">กรอกฟอร์ม</h2><p id="fillDesc"></p><button class="btn" id="fillBack">← กลับ</button></div>
-<div class="subm"><h3>📝 ข้อมูลผู้กรอก (บังคับ)</h3><div class="sgrid">
-<div class="fld" style="margin:0"><label for="fillName">ชื่อ-นามสกุล</label><input id="fillName" maxlength="200" placeholder="เช่น นายสมชาย ใจดี"></div>
-<div class="fld" style="margin:0"><label for="fillCid">เลขบัตรประชาชน 13 หลัก</label><input id="fillCid" inputmode="numeric" maxlength="13" placeholder="1234567890123"></div>
+<div class="fillStepper" id="fillStepper" aria-label="ขั้นตอนการกรอก"></div>
+<div class="subm" id="fillApplicant"><h3>📝 ข้อมูลผู้กรอก (บังคับ)</h3><div class="sgrid">
+<div class="fld" style="margin:0"><label for="fillName">ชื่อ-นามสกุล</label><input id="fillName" maxlength="200" placeholder="เช่น นายสมชาย ใจดี"><div class="ferr" id="fillNameError" hidden></div></div>
+<div class="fld" style="margin:0"><label for="fillCid">เลขบัตรประชาชน 13 หลัก</label><input id="fillCid" inputmode="numeric" autocomplete="off" maxlength="13" placeholder="1234567890123"><div class="ferr" id="fillCidError" hidden></div></div>
 </div></div>
 <div class="ftb" id="fillToolbar">
 <div class="seg" id="fillSeg"><button type="button" data-fm="simple">📋 ฟอร์มง่าย</button><button type="button" data-fm="paper">📄 กระดาษ A4</button></div>
@@ -536,8 +557,10 @@ html,body{margin:0;padding:0;font-family:'Noto Sans Thai','Sarabun',sans-serif;c
 <span class="sp"></span><span class="fpg" id="fillProg"><span class="pb2"><i></i></span><b>0/0</b></span>
 </div>
 <div class="fwrap" id="fillWrap"><div class="zbox"><div class="sheet" id="fillCanvas"></div></div></div>
+<div class="fillSubstep" id="fillSubstep" hidden></div>
 <div class="fsimple" id="fillSimple" hidden></div>
-<div class="facts"><button class="btn pri lg" id="fillSend">📤 ส่งคำขอ</button><button class="btn lg" id="fillClear">ล้างฟอร์ม</button></div>
+<div class="fillReview" id="fillReview" hidden></div>
+<div class="facts wizardActions" id="fillActions"><div class="actLeft"><button class="btn lg" id="fillPrev" hidden>← ย้อนกลับ</button><button class="btn lg" id="fillClear">ล้างฟอร์ม</button><button class="btn lg" id="fillDraft">💾 บันทึกร่าง</button></div><div class="actRight"><button class="btn lg" id="fillNext">ถัดไป →</button><button class="btn pri lg" id="fillSend" hidden>ยืนยันและส่งคำขอ</button></div><div class="draftStatus" id="fillDraftStatus" aria-live="polite"></div></div>
 </section>
 <section class="pv" id="pvOk"><div class="okh"><div class="oi" id="okIco"></div><h2>ส่งคำขอเรียบร้อยแล้ว</h2>
 <p id="okName" style="color:var(--tx2)"></p>
@@ -695,7 +718,7 @@ Object.keys(DB.drafts).forEach(function(k){if(!ids[k])delete DB.drafts[k]});
 var persist=debounce(function(){try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){}},400);
 var token=null;try{token=localStorage.getItem(TOK)}catch(e){}
 var S={shell:'public',sec:null,me:'',role:'',conn:'wait',connMsg:'',pubView:'home',pubQ:'',
-fill:{tpl:null,fields:[],data:{},mode:'simple',zoom:0,errors:{}},lastSub:null,
+fill:{tpl:null,fields:[],data:{},mode:'simple',zoom:0,page:0,group:0,groups:[],errors:{},touched:{},draftId:null,draftSession:null,draftSaving:false},lastSub:null,
 forms:{q:'',status:'all',dept:'all',sort:'updated',view:'grid',fav:false},
 inbox:{tpl:'all',status:'ALL',q:'',sort:'newest',sel:new Set()},mine:{q:'',status:'all'},
 staff:{q:'',dept:'all',active:'all',sel:new Set()},
@@ -787,7 +810,7 @@ function normalizeFieldNames(fields){var seen=Object.create(null),changed=0;(fie
  var keep=DB.templates.filter(function(t){return isLocal(t.id)});
  var server=list.filter(function(t){return isUuid(t.id)}).map(function(t){var ex=tpl(t.id),rf=fieldList(t),source=rf!==null?rf:[],clean=dedupeFields(source);
 if(ex&&ex.department&&ex.department!=='—')DB.deptMap[t.id]=ex.department;
-return{id:String(t.id).toLowerCase(),name:t.name,description:t.description||'',department:DB.deptMap[t.id]||(ex&&ex.department)||'—',
+return{id:String(t.id).toLowerCase(),name:t.name,description:t.description||'',schema:t.schema||((ex&&ex.schema)||null),department:DB.deptMap[t.id]||(ex&&ex.department)||'—',
 is_active:activeOnly?true:t.is_active===true,created_at:t.created_at||new Date().toISOString(),updated_at:t.updated_at||t.created_at||new Date().toISOString(),
 fields:clean.fields,_staleFieldIds:clean.stale}}).map(function(t){setStaleFieldIds(t,t._staleFieldIds);return t});
 DB.templates=keep.concat(server);S.grow.clear();THUMBS.clear();LAYOUT.sig='';persist()}
@@ -1071,33 +1094,89 @@ function previewFields(id,t){if(S.b.id===id&&Array.isArray(S.b.fields)&&S.b.fiel
 function initFillData(){var d={};S.fill.fields.forEach(function(f){if(INP.indexOf(f.field_type)>=0)d[f.name]=(OPT.concat('checkbox_agree').indexOf(f.field_type)>=0)?'':(f.value||'')});
 S.fill.data=d;S.fill.errors={}}
 var fillBusy=false;
-function openFill(rawId){var id=fixUuid(rawId)||String(rawId||'');
+function buildFillGroups(t,fields){var inputs=(fields||[]).filter(function(f){return INP.indexOf(f.field_type)>=0}),steps=t&&t.schema&&Array.isArray(t.schema.userSteps)?t.schema.userSteps:[],seen={},out=[];
+steps.forEach(function(s){var names=Array.isArray(s.fields)?s.fields:[],set=Object.create(null);names.forEach(function(n){set[String(n)]=1});var rows=inputs.filter(function(f){return set[f.name]&&!seen[f.name]});
+if(rows.length){rows.forEach(function(f){seen[f.name]=1});out.push({title:String(s.title||'รายละเอียดคำขอ'),fields:rows})}});
+var rest=inputs.filter(function(f){return !seen[f.name]});if(rest.length)out.push({title:'รายละเอียดคำขอ',fields:rest});
+if(!out.length&&inputs.length)out.push({title:'รายละเอียดคำขอ',fields:inputs});return out}
+function openFill(rawId,initialDraft,draftSession){var id=fixUuid(rawId)||String(rawId||'');
 if(!id||(!isUuid(id)&&!isLocal(id))){toast('ลิงก์ฟอร์มไม่ถูกต้อง',{type:'warn'});pubGo('forms');return}
 if(fillBusy)return;fillBusy=true;
 if(S.shell!=='public')setShell('public');
 /* Always reload a persisted UUID here. The builder may contain unsaved local
    edits and must never leak them into the User/Preview view. */
-ensureFields(id,isUuid(id),true).then(function(t){
+return ensureFields(id,isUuid(id),true).then(function(t){
 if(!t){toast('ไม่พบแบบฟอร์มนี้',{type:'warn'});pubGo('forms');return}
 var fields=uniqueFields(t.fields||[]);
 if(!fields.some(function(f){return INP.indexOf(f.field_type)>=0})){toast('ฟอร์มนี้ยังไม่มีช่องให้กรอก',{type:'warn'});pubGo('forms');return}
-S.fill={tpl:t.id,fields:fields,data:{},mode:'simple',zoom:0,errors:{}};
+S.fill={tpl:t.id,fields:fields,data:{},mode:'simple',zoom:0,page:0,group:0,groups:buildFillGroups(t,fields),errors:{},touched:{},draftId:initialDraft&&initialDraft.id||null,draftSession:draftSession||null,draftSaving:false};
 initFillData();$('#fillTitle').textContent=t.name;$('#fillDesc').textContent=t.description||'';
 $('#fillName').value='';$('#fillCid').value='';
-showPub('fill');history.replaceState(null,'','#/fill/'+t.id);setFillMode(S.fill.mode);
-requestAnimationFrame(function(){if(S.fill.mode==='paper'){S.fill.zoom=fitSheet($('#fillWrap'));applyFillZoom()}})})
+if(initialDraft){Object.keys(initialDraft.formData||{}).forEach(function(k){if(Object.prototype.hasOwnProperty.call(S.fill.data,k))S.fill.data[k]=String(initialDraft.formData[k])});$('#fillName').value=initialDraft.fullName||''}
+showPub('fill');history.replaceState(null,'','#/fill/'+t.id);renderFillFlow();
+if(S.fill.draftId)$('#fillDraftStatus').textContent='แบบร่างที่ยืนยันอีเมลแล้ว · ต้องกรอกเลขบัตรใหม่ก่อนส่ง';
+requestAnimationFrame(function(){if(S.fill.mode==='paper'&&S.fill.page===1){S.fill.zoom=fitSheet($('#fillWrap'));applyFillZoom()}})})
 .catch(function(e){toast('โหลดฟอร์มไม่สำเร็จ: '+e.message,{type:'bad',ms:7000});pubGo('forms')})
 .then(function(){fillBusy=false},function(){fillBusy=false})}
-function setFillMode(m){S.fill.mode=m;
+var draftAuthState={email:'',challengeId:''},draftSaveTimer=null;
+function draftSafeData(){var out=Object.create(null);(S.fill.fields||[]).forEach(function(f){if(INP.indexOf(f.field_type)>=0&&!isCitizenIdFieldClient_(f))out[f.name]=String(S.fill.data[f.name]||'')});return out}
+function setDraftStatus(text){var e=$('#fillDraftStatus');if(e)e.textContent=text||''}
+function flushFormDraftSave(){if(draftSaveTimer){clearTimeout(draftSaveTimer);draftSaveTimer=null}
+if(!S.fill||!S.fill.draftSession)return Promise.resolve(null);var state=S.fill;
+if(state.draftPromise){state.draftPending=true;return state.draftPromise}
+var payload={id:state.draftId||'',templateId:state.tpl,fullName:$('#fillName').value.trim(),formData:draftSafeData(),sessionToken:state.draftSession};
+state.draftSaving=true;setDraftStatus('กำลังบันทึกร่างโดยไม่เก็บเลขบัตรประชาชน…');
+var request=rawApi('saveFormDraft',payload,false,{timeout:25000}).then(function(r){if(!r||!isUuid(r.id))throw new Error('เซิร์ฟเวอร์ไม่ยืนยันการบันทึกร่าง');state.draftId=r.id;state.draftExpiresAt=r.expiresAt;if(S.fill===state)setDraftStatus('บันทึกร่างแล้ว · หมดอายุ '+fdate(r.expiresAt)+' · เลขบัตรต้องกรอกใหม่ก่อนส่ง');return r}).catch(function(e){if(S.fill===state){if(/เซสชันแบบร่างหมดอายุ|ยืนยันอีเมลอีกครั้ง/i.test(e.message||'')){state.draftSession=null;setDraftStatus('เซสชันหมดอายุ · กด “บันทึกร่าง” แล้วยืนยันอีเมลอีกครั้ง')}
+else setDraftStatus('บันทึกร่างไม่สำเร็จ · '+String(e.message||'กรุณาลองอีกครั้ง').slice(0,140))}throw e}).then(function(r){state.draftSaving=false;state.draftPromise=null;var again=state.draftPending;state.draftPending=false;if(again&&S.fill===state&&state.draftSession)queueFormDraftSave();return r},function(e){state.draftSaving=false;state.draftPromise=null;state.draftPending=false;return Promise.reject(e)});
+state.draftPromise=request;return request}
+function queueFormDraftSave(){if(!S.fill)return;if(!S.fill.draftSession){setDraftStatus('ยืนยันอีเมลก่อนเพื่อบันทึกร่างอย่างปลอดภัย');return}
+if(draftSaveTimer)clearTimeout(draftSaveTimer);draftSaveTimer=setTimeout(function(){flushFormDraftSave().catch(function(){})},850)}
+function renderDraftEmail(intent){draftAuthState={email:'',challengeId:''};$('#modalTitle').textContent=intent==='save'?'บันทึกร่างและยืนยันอีเมล':'กลับมากรอกต่อด้วย OTP';
+$('#modalBody').innerHTML='<p class="note">ระบบส่งรหัส 6 หลักไปยังอีเมลที่คุณระบุ · รหัสหมดอายุใน 10 นาที · แบบร่างอยู่ได้ 24 ชั่วโมง และไม่บันทึกเลขบัตรประชาชน</p><div class="fld"><label for="draftEmail">อีเมลสำหรับกู้คืนร่าง</label><input id="draftEmail" type="email" maxlength="254" autocomplete="email" placeholder="name@example.go.th"></div><div class="draftStatus" id="draftModalStatus" aria-live="polite"></div>';
+$('#modalFoot').innerHTML='<button class="btn" data-draft-cancel>ยกเลิก</button><button class="btn pri" data-draft-send>ส่งรหัส OTP</button>';$('#modalScrim').hidden=false;
+$('#modalFoot').onclick=function(e){if(e.target.closest('[data-draft-cancel]')){closeModal();return}if(!e.target.closest('[data-draft-send]'))return;
+var email=$('#draftEmail').value.trim().toLowerCase(),btn=e.target.closest('[data-draft-send]');if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){toast('กรุณากรอกอีเมลให้ถูกต้อง',{type:'warn'});return}
+btn.disabled=true;$('#draftModalStatus').textContent='กำลังส่งรหัส…';rawApi('requestFormDraftOtp',{email:email},false,{timeout:25000}).then(function(r){draftAuthState.email=email;draftAuthState.challengeId=r.challengeId;renderDraftOtp(intent,r.maskedEmail)}).catch(function(err){$('#draftModalStatus').textContent=err.message||'ส่งรหัสไม่สำเร็จ';btn.disabled=false})}}
+function renderDraftOtp(intent,maskedEmail){$('#modalTitle').textContent='ยืนยันอีเมล';$('#modalBody').innerHTML='<p class="note">ส่งรหัส OTP ไปที่ '+esc(maskedEmail||'อีเมลของคุณ')+' แล้ว กรุณากรอกรหัส 6 หลักภายใน 10 นาที</p><div class="fld"><label for="draftOtp">รหัส OTP</label><input id="draftOtp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••"></div><div class="draftStatus" id="draftModalStatus" aria-live="polite"></div>';
+$('#modalFoot').innerHTML='<button class="btn" data-draft-back>กลับ</button><button class="btn pri" data-draft-verify>ยืนยัน</button>';
+$('#modalFoot').onclick=function(e){if(e.target.closest('[data-draft-back]')){renderDraftEmail(intent);return}var btn=e.target.closest('[data-draft-verify]');if(!btn)return;var code=$('#draftOtp').value.trim();if(!/^\d{6}$/.test(code)){toast('กรุณากรอกรหัส 6 หลัก',{type:'warn'});return}btn.disabled=true;$('#draftModalStatus').textContent='กำลังตรวจสอบ…';
+rawApi('verifyFormDraftOtp',{challengeId:draftAuthState.challengeId,email:draftAuthState.email,code:code},false,{timeout:25000}).then(function(r){if(!r||!r.sessionToken)throw new Error('ระบบไม่ยืนยันเซสชัน');draftAuthState.challengeId='';if(intent==='save'){S.fill.draftSession=r.sessionToken;return flushFormDraftSave().then(function(){closeModal();draftAuthState.email='';toast('บันทึกร่างแล้ว สามารถกลับมากรอกต่อได้ภายใน 24 ชั่วโมง',{type:'ok'})})}
+return rawApi('listFormDrafts',{sessionToken:r.sessionToken},false,{timeout:25000}).then(function(rows){renderDraftList(rows||[],r.sessionToken)})}).catch(function(err){$('#draftModalStatus').textContent=err.message||'ยืนยันไม่สำเร็จ';btn.disabled=false})}}
+function renderDraftList(rows,sessionToken){var active=(rows||[]).filter(function(r){return r.isActive});$('#modalTitle').textContent='แบบร่างของคุณ';
+$('#modalBody').innerHTML='<p class="note">เลือกแบบร่างเพื่อกลับมากรอกต่อ · เลขบัตรประชาชนไม่ได้อยู่ในแบบร่างและต้องกรอกใหม่</p>'+(active.length?'<div class="userStepRows">'+active.map(function(r){return '<div class="userStepRow"><span><b>'+esc(r.templateName||'แบบฟอร์ม')+'</b><small>'+esc(r.fullName||'ยังไม่ระบุชื่อ')+' · อัปเดต '+esc(fdate(r.updatedAt))+'</small></span><button class="btn pri" data-open-form-draft="'+esc(r.id)+'">เปิดร่าง</button></div>'}).join('')+'</div>':'<div class="empty"><h3>ยังไม่มีแบบร่างที่ใช้ต่อได้</h3><p>อาจหมดอายุแล้ว หรือฟอร์มต้นฉบับไม่ได้เปิดรับกรอก</p></div>');
+$('#modalFoot').innerHTML='<button class="btn" data-draft-cancel>ปิด</button>';$('#modalFoot').onclick=function(e){if(e.target.closest('[data-draft-cancel]'))closeModal()};$('#modalBody').onclick=function(e){var b=e.target.closest('[data-open-form-draft]');if(!b)return;b.disabled=true;rawApi('getFormDraft',{id:b.dataset.openFormDraft,sessionToken:sessionToken},false,{timeout:25000}).then(function(d){closeModal();draftAuthState.email='';openFill(d.templateId,d,sessionToken)}).catch(function(err){toast('เปิดแบบร่างไม่สำเร็จ: '+err.message,{type:'bad',ms:7000});b.disabled=false})}}
+function startDraftFlow(intent){if(intent==='save'&&S.fill&&S.fill.draftSession){flushFormDraftSave().then(function(){toast('บันทึกร่างแล้ว',{type:'ok'})}).catch(function(){});return}renderDraftEmail(intent)}
+function renderFillStepper(){var labels=['ข้อมูลผู้ยื่น','รายละเอียดคำขอ','ตรวจทาน'];$('#fillStepper').innerHTML=labels.map(function(x,i){return '<div class="fillStep'+(S.fill.page===i?' on':'')+(S.fill.page>i?' done':'')+'"><span class="n">'+(S.fill.page>i?'✓':i+1)+'</span><span class="fillStepTitle">'+x+'</span></div>'}).join('')}
+function renderFillReview(){var name=$('#fillName').value.trim(),cid=$('#fillCid').value.trim(),mask=cid.length===13?'•••••••••'+cid.slice(-4):'ยังไม่ได้กรอก';
+var h='<h3>ตรวจทานข้อมูลก่อนส่ง</h3><p class="note">ตรวจชื่อและคำตอบให้ถูกต้อง เลขบัตรจะแสดงบางส่วนและจะไม่ถูกเก็บในแบบร่าง</p>'+
+'<div class="reviewGroup"><header><span>ข้อมูลผู้ยื่น</span><button class="btn sm" data-review-to="0">แก้ไข</button></header><dl><dt>ชื่อ-นามสกุล</dt><dd>'+esc(name||'—')+'</dd><dt>เลขบัตรประชาชน</dt><dd>'+esc(mask)+'</dd></dl></div>';
+(S.fill.groups||[]).forEach(function(g,i){h+='<div class="reviewGroup"><header><span>'+esc(g.title)+'</span><button class="btn sm" data-review-to="'+(i+1)+'">แก้ไข</button></header><dl>'+
+g.fields.map(function(f){var v=String(S.fill.data[f.name]||'').trim();if(isCitizenIdFieldClient_(f)&&v.length>=4)v='•••••••••'+v.slice(-4);return '<dt>'+esc(f.label||f.name)+'</dt><dd>'+esc(v||'—')+'</dd>'}).join('')+'</dl></div>'});
+$('#fillReview').innerHTML=h}
+function renderFillFlow(){if(!S.fill||!S.fill.tpl)return;renderFillStepper();
+var page=S.fill.page,formPage=page===1,paper=formPage&&S.fill.mode==='paper';
+$('#fillApplicant').hidden=!(page===0||paper);$('#fillToolbar').hidden=!formPage;
+$('#fillWrap').hidden=!paper;$('#fillZoom').style.display=paper?'flex':'none';
+$('#fillSimple').hidden=!(formPage&&!paper);$('#fillReview').hidden=page!==2;
+$('#fillSubstep').hidden=!(formPage&&!paper);$('#fillPrev').hidden=page===0;
+$('#fillNext').hidden=page===2;$('#fillSend').hidden=page!==2;$('#fillClear').hidden=page!==1;
+$('#fillDraft').hidden=false;
+if(formPage&&!paper)renderFillSimple();else if(paper)renderFillPaper();else if(page===2)renderFillReview();
+var nextText=page===0?'ถัดไป: รายละเอียดคำขอ':page===2?'ยืนยันและส่งคำขอ':'ไปตรวจทาน';
+if(formPage&&!paper&&S.fill.group<(S.fill.groups||[]).length-1)nextText='ถัดไป: '+S.fill.groups[S.fill.group+1].title;
+$('#fillNext').textContent=nextText;
+var prevText=page===2?'← กลับไปแก้ไข':page===1&&!paper&&S.fill.group>0?'← '+S.fill.groups[S.fill.group-1].title:'← ข้อมูลผู้ยื่น';
+$('#fillPrev').textContent=prevText;updateProgress()}
+function setFillMode(m){if(m!=='paper'&&m!=='simple')return;if(S.fill.mode==='paper'&&m!=='paper')Object.assign(S.fill.data,collectFill($('#fillCanvas'),S.fill.fields));S.fill.mode=m;
 $$('#fillSeg button').forEach(function(b){b.classList.toggle('on',b.dataset.fm===m)});
-var paper=m==='paper';$('#fillWrap').hidden=!paper;$('#fillZoom').style.display=paper?'flex':'none';$('#fillSimple').hidden=paper;
-if(paper)renderFillPaper();else renderFillSimple();updateProgress()}
+renderFillFlow();queueFormDraftSave()}
 function renderFillPaper(){var c=paintSheet('#fillCanvas',S.fill.fields,'fill',S.fill.data);if(!c)return;
 if(!S.fill.zoom)S.fill.zoom=fitSheet($('#fillWrap'));applyFillZoom();markErrors()}
 function applyFillZoom(){var c=$('#fillCanvas');if(!c)return;zoomSheet(c,S.fill.zoom||1);
 $('#fillZoomLbl').textContent=Math.round((S.fill.zoom||1)*100)+'%'}
 function renderFillSimple(){var box=$('#fillSimple');
-var inputs=S.fill.fields.filter(function(f){return INP.indexOf(f.field_type)>=0});
+var group=(S.fill.groups||[])[S.fill.group],inputs=group?group.fields:[];
+$('#fillSubstep').innerHTML='<span>ส่วน '+(S.fill.group+1)+' จาก '+Math.max(1,S.fill.groups.length)+' · '+esc(group&&group.title||'รายละเอียดคำขอ')+'</span><span>'+(group?group.fields.length:0)+' ช่อง</span>';
 if(!inputs.length){box.innerHTML=emptyHTML('forms','ฟอร์มนี้ยังไม่มีช่องให้กรอก','');return}
 box.innerHTML=inputs.map(function(f,i){var v=S.fill.data[f.name]==null?'':S.fill.data[f.name];
 var label=esc(f.label||FTL[f.field_type]||f.name),rq=f.required?'<span class="rq">*</span>':'',ctl;
@@ -1121,12 +1200,14 @@ if(f.field_type==='radio'||f.field_type==='checkbox'){var sel=v.split(', ').filt
 $$('input',el).forEach(function(i){i.checked=sel.indexOf(i.value)>=0})}
 else if(f.field_type==='checkbox_agree'){var b=$('input',el);if(b)b.checked=!!v}
 else{var i=el.querySelector('input,textarea,select');if(i)i.value=v}}
-function clearErr(n){if(!S.fill.errors[n])return;delete S.fill.errors[n];
+function clearErr(n){if(n==='_applicant_name'||n==='_applicant_cid'){delete S.fill.errors[n];var target=n==='_applicant_name'?$('#fillNameError'):$('#fillCidError');if(target){target.hidden=true;target.textContent=''}return}
+if(!S.fill.errors[n])return;delete S.fill.errors[n];
 var c=$('#fillSimple').querySelector('[data-card="'+cssEsc(n)+'"]');
 if(c){c.classList.remove('err');var e=$('.ferr',c);if(e)e.hidden=true}
 var f=S.fill.fields.filter(function(x){return x.name===n})[0];
 var el=f&&$('#fillCanvas').querySelector('[data-fid="'+cssEsc(f.id)+'"]');if(el)el.style.outline=''}
 function markErrors(){Object.keys(S.fill.errors).forEach(function(n){
+if(n==='_applicant_name'||n==='_applicant_cid'){var target=n==='_applicant_name'?$('#fillNameError'):$('#fillCidError');if(target){target.hidden=false;target.textContent=S.fill.errors[n]}return}
 var f=S.fill.fields.filter(function(x){return x.name===n})[0];if(!f)return;
 var el=$('#fillCanvas').querySelector('[data-fid="'+cssEsc(f.id)+'"]');if(el)el.style.outline='2px solid #F43F5E';
 var c=$('#fillSimple').querySelector('[data-card="'+cssEsc(n)+'"]');
@@ -1135,17 +1216,44 @@ function updateProgress(){var req=S.fill.fields.filter(function(f){return f.requ
 var done=req.filter(function(f){return String(S.fill.data[f.name]||'').trim()}).length,p=$('#fillProgress')||$('#fillProg');
 $('i',p).style.width=(req.length?Math.round(done/req.length*100):100)+'%';
 $('b',p).textContent=done+'/'+req.length+' ช่องบังคับ';p.classList.toggle('done',done===req.length)}
-function validateFill(){var e={};
-S.fill.fields.forEach(function(f){if(INP.indexOf(f.field_type)<0)return;
-var v=String(S.fill.data[f.name]||'').trim();
-if(f.required&&!v)e[f.name]='กรุณากรอก '+(f.label||FTL[f.field_type]);
-else if(f.field_type==='date'&&v&&!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(v))e[f.name]='รูปแบบวันที่ไม่ถูกต้อง';
-else if(v.length>5000)e[f.name]='ข้อความยาวเกินไป'});
-S.fill.errors=e;return e}
+function isCitizenIdFieldClient_(f){var v=(String(f&&f.name||'')+' '+String(f&&f.label||'')).toLowerCase();return /(citizen|national[ _-]*id|id[ _-]*card|(^|\W)cid(\W|$)|เลข.{0,12}(บัตร|ประจำตัวประชาชน|ประชาชน)|บัตรประชาชน)/i.test(v)}
+function validThaiCitizenId_(v){v=String(v||'');if(!/^\d{13}$/.test(v))return false;var sum=0;for(var i=0;i<12;i++)sum+=Number(v.charAt(i))*(13-i);return ((11-(sum%11))%10)===Number(v.charAt(12))}
+function validateApplicant(){var e={},name=$('#fillName').value.trim(),cid=$('#fillCid').value.trim();
+if(!name)e._applicant_name='กรุณากรอกชื่อ-นามสกุล';else if(name.length>200)e._applicant_name='ชื่อ-นามสกุลยาวเกินไป';
+if(!/^\d{13}$/.test(cid))e._applicant_cid='กรุณากรอกเลขบัตรประชาชน 13 หลัก';else if(!validThaiCitizenId_(cid))e._applicant_cid='เลขบัตรประชาชนไม่ผ่านการตรวจสอบ';return e}
+function validateFieldSet(fields){var e={};(fields||[]).forEach(function(f){if(INP.indexOf(f.field_type)<0)return;
+var v=String(S.fill.data[f.name]||'').trim(),title=f.label||FTL[f.field_type]||f.name,opts=Array.isArray(f.options)?f.options:[];
+if(f.required&&!v)e[f.name]='กรุณากรอก '+title;
+else if(f.field_type==='date'&&v&&!/^\d{4}-\d{2}-\d{2}$/.test(v))e[f.name]='รูปแบบวันที่ไม่ถูกต้อง';
+else if(v.length>5000)e[f.name]='ข้อความยาวเกินไป';
+else if((f.field_type==='select'||f.field_type==='radio')&&v&&opts.length&&opts.indexOf(v)<0)e[f.name]='กรุณาเลือกตัวเลือกที่กำหนด';
+else if(f.field_type==='checkbox'&&v&&opts.length&&v.split(', ').some(function(x){return opts.indexOf(x)<0}))e[f.name]='มีตัวเลือกที่ไม่ถูกต้อง';
+else if(v&&/(e-?mail|อีเมล)/i.test(String(f.name)+' '+String(f.label))&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v))e[f.name]='รูปแบบอีเมลไม่ถูกต้อง';
+else if(v&&isCitizenIdFieldClient_(f)&&!validThaiCitizenId_(v))e[f.name]='เลขบัตรประชาชนไม่ถูกต้อง'});return e}
+function validateFill(){var e=validateApplicant();Object.assign(e,validateFieldSet(S.fill.fields));S.fill.errors=e;return e}
+function validateLiveApplicant(key){if(!S.fill.touched[key])return;var all=validateApplicant(),name=key==='_applicant_name',err=all[key],box=name?$('#fillNameError'):$('#fillCidError');if(err){S.fill.errors[key]=err;box.hidden=false;box.textContent=err}else{delete S.fill.errors[key];box.hidden=true;box.textContent=''}}
+function validateLiveField(name){if(!S.fill.touched[name])return;var f=S.fill.fields.filter(function(x){return x.name===name})[0];if(!f)return;var err=validateFieldSet([f])[name],card=$('#fillSimple').querySelector('[data-card="'+cssEsc(name)+'"]');if(err)S.fill.errors[name]=err;else delete S.fill.errors[name];if(card){card.classList.toggle('err',!!err);var msg=$('.ferr',card);if(msg){msg.hidden=!err;msg.textContent=err||''}}}
+function jumpToFillError(){var names=Object.keys(S.fill.errors),n=names[0];if(!n)return;
+if(n==='_applicant_name'||n==='_applicant_cid'){S.fill.page=0}
+else{S.fill.page=1;var gi=(S.fill.groups||[]).findIndex(function(g){return g.fields.some(function(f){return f.name===n})});if(gi>=0)S.fill.group=gi}
+renderFillFlow();markErrors();focusErr()}
 function focusErr(){var n=Object.keys(S.fill.errors)[0];if(!n)return;
+if(n==='_applicant_name'){ $('#fillName').focus();return}if(n==='_applicant_cid'){$('#fillCid').focus();return}
 var f=S.fill.fields.filter(function(x){return x.name===n})[0];if(!f)return;
 var t=S.fill.mode==='simple'?$('#fillSimple').querySelector('[data-card="'+cssEsc(n)+'"]'):$('#fillCanvas').querySelector('[data-fid="'+cssEsc(f.id)+'"]');
 if(t){t.scrollIntoView({block:'center',behavior:'smooth'});var i=t.querySelector('input,textarea,select');if(i)setTimeout(function(){i.focus()},300)}}
+function fillStepNext(){if(S.fill.page===0){S.fill.errors=validateApplicant();if(Object.keys(S.fill.errors).length){markErrors();focusErr();return}
+S.fill.page=1;S.fill.group=0;renderFillFlow();queueFormDraftSave();return}
+if(S.fill.page!==1)return;
+if(S.fill.mode==='paper')Object.assign(S.fill.data,collectFill($('#fillCanvas'),S.fill.fields));
+var current=S.fill.mode==='simple'&&S.fill.groups[S.fill.group]?S.fill.groups[S.fill.group].fields:S.fill.fields;
+S.fill.errors=validateFieldSet(current);if(Object.keys(S.fill.errors).length){markErrors();focusErr();return}
+if(S.fill.mode==='simple'&&S.fill.group<S.fill.groups.length-1){S.fill.group++;renderFillFlow();queueFormDraftSave();return}
+S.fill.errors=validateFill();if(Object.keys(S.fill.errors).length){jumpToFillError();return}
+S.fill.page=2;renderFillFlow();queueFormDraftSave()}
+function fillStepPrev(){if(S.fill.page===2){S.fill.page=1;if(S.fill.mode==='simple')S.fill.group=Math.max(0,S.fill.groups.length-1)}
+else if(S.fill.page===1&&S.fill.mode==='simple'&&S.fill.group>0)S.fill.group--;
+else if(S.fill.page===1)S.fill.page=0;renderFillFlow();queueFormDraftSave()}
 function previewPub(id){
 ensureFields(id,isUuid(id),true).then(function(t){
 var fields=uniqueFields(t&&t.fields||[]);if(!t||!fields.length)return toast('ยังไม่มีฟิลด์ให้แสดงตัวอย่าง',{type:'warn'});
@@ -1153,17 +1261,16 @@ openDrawer('ตัวอย่างฟอร์ม',t.name,'<div class="ma4" id
 miniA4('#pvA4',fields,{});
 $('#drawerFoot').onclick=function(e){if(e.target.closest('[data-pv]')){closeDrawer();openFill(id)}}})
 .catch(function(e){toast('โหลดตัวอย่างไม่สำเร็จ: '+e.message,{type:'bad',ms:7000})})}
-function submitFill(){var name=$('#fillName').value.trim(),cid=$('#fillCid').value.trim();
-if(!name){toast('กรุณากรอกชื่อ-นามสกุลผู้ยื่น',{type:'warn'});$('#fillName').focus();return}
-if(!/^[0-9]{13}$/.test(cid)){toast('เลขบัตรประชาชนต้องเป็นตัวเลข 13 หลัก',{type:'warn'});$('#fillCid').focus();return}
-if(S.fill.mode==='paper')Object.assign(S.fill.data,collectFill($('#fillCanvas'),S.fill.fields));
-var e=validateFill();
-if(Object.keys(e).length){markErrors();focusErr();toast(e[Object.keys(e)[0]],{type:'warn'});return}
+function submitFill(){if(S.fill.page!==2){fillStepNext();return}
+var name=$('#fillName').value.trim(),cid=$('#fillCid').value.trim(),e=validateFill();
+if(Object.keys(e).length){jumpToFillError();toast(e[Object.keys(e)[0]],{type:'warn'});return}
 if(!isUuid(S.fill.tpl)){toast('ฟอร์มร่างยังส่งจริงไม่ได้ — ให้ผู้ดูแลบันทึกและเผยแพร่ก่อน',{type:'warn'});return}
 var t=tpl(S.fill.tpl),data=Object.assign({},S.fill.data),btn=$('#fillSend'),oldText=btn.textContent;
 btn.disabled=true;btn.textContent='กำลังส่งคำขอ…';
 rawApi('submitFormAnonymous',{templateId:S.fill.tpl,formData:data,citizenId:cid,fullName:name},false,{timeout:30000})
 .then(function(res){if(!res||!isUuid(res.id))throw new Error('เซิร์ฟเวอร์ไม่ยืนยันรหัสคำขอ');
+if(S.fill.draftId&&S.fill.draftSession)rawApi('deleteFormDraft',{id:S.fill.draftId,sessionToken:S.fill.draftSession},false).catch(function(){});
+S.fill.draftId=null;S.fill.draftSession=null;
 var id=String(res.id).toLowerCase(),rid=res.referenceId||id.slice(0,8).toUpperCase(),submittedAt=res.submittedAt||new Date().toISOString();
 S.lastSub={id:id,referenceId:rid,cid:cid,templateName:t?t.name:'',fields:S.fill.fields,data:data};
 DB.submissions.unshift({id:id,_cid:cid,template_id:S.fill.tpl,template_name:t?t.name:'',submitted_by_name:name,
@@ -1220,9 +1327,15 @@ $('#pubMain').addEventListener('scroll',function(){var y=$('#pubMain').scrollTop
 if(a&&S.pubView==='home'&&y<600)a.style.transform='translateY('+(y*.14)+'px)'},{passive:true});
 $('#pfSearch').oninput=debounce(function(e){S.pubQ=e.target.value;renderForms()},160);
 $('#pfReload').onclick=function(){invalidate('getPublicFormTemplates');testConn().then(syncPublic)};
-$('#fillBack').onclick=function(){pubGo('forms')};
-$('#fillClear').onclick=function(){if(!confirm('ล้างข้อมูลที่กรอกไว้ทั้งหมด?'))return;initFillData();setFillMode(S.fill.mode)};
+$('#pfResumeDraft').onclick=function(){startDraftFlow('resume')};
+$('#fillBack').onclick=function(){if(S.fill&&S.fill.draftSession)flushFormDraftSave().catch(function(){}).then(function(){pubGo('forms')});else pubGo('forms')};
+$('#fillPrev').onclick=fillStepPrev;
+$('#fillNext').onclick=fillStepNext;
+$('#fillDraft').onclick=function(){startDraftFlow('save')};
+$('#fillClear').onclick=function(){if(!confirm('ล้างข้อมูลที่กรอกไว้ทั้งหมด?'))return;initFillData();$('#fillName').value='';$('#fillCid').value='';S.fill.page=0;S.fill.group=0;S.fill.errors={};S.fill.touched={};renderFillFlow();queueFormDraftSave()};
 $('#fillSend').onclick=submitFill;
+$('#fillReview').onclick=function(e){var b=e.target.closest('[data-review-to]');if(!b)return;var p=Number(b.dataset.reviewTo);S.fill.page=p===0?0:1;if(p>0)S.fill.group=p-1;renderFillFlow()};
+['fillName','fillCid'].forEach(function(id){var el=$('#'+id),key=id==='fillName'?'_applicant_name':'_applicant_cid';el.addEventListener('blur',function(){S.fill.touched[key]=true;validateLiveApplicant(key)});el.addEventListener('input',function(){validateLiveApplicant(key);if(id==='fillName')queueFormDraftSave()})});
 $('#fillToolbar').addEventListener('click',function(e){var m=e.target.closest('[data-fm]'),z=e.target.closest('[data-fz]');
 if(m){setFillMode(m.dataset.fm);return}
 if(z){var k=z.dataset.fz;S.fill.zoom=k==='fit'?fitSheet($('#fillWrap')):clamp((S.fill.zoom||1)+(k==='in'?.15:-.15),.3,2);applyFillZoom()}});
@@ -1231,20 +1344,22 @@ if(w&&w.dataset.ft){var n=w.dataset.fn;
 if(w.dataset.ft==='checkbox_agree'){S.fill.data[n]=t.checked?'ยอมรับ':'';w.classList.toggle('on',t.checked)}
 else{S.fill.data[n]=$$('input:checked',w).map(function(i){return i.value}).join(', ');
 $$('.fopt',w).forEach(function(l){l.classList.toggle('on',$('input',l).checked)})}
-clearErr(n);updateProgress();syncPaper(n);return}
+clearErr(n);validateLiveField(n);updateProgress();syncPaper(n);queueFormDraftSave();return}
 var nn=t.dataset&&t.dataset.fn;if(!nn)return;
-S.fill.data[nn]=t.value;clearErr(nn);updateProgress();syncPaper(nn)}
+S.fill.data[nn]=t.value;clearErr(nn);validateLiveField(nn);updateProgress();syncPaper(nn);queueFormDraftSave()}
 $('#fillSimple').addEventListener('input',simpleInput);
 $('#fillSimple').addEventListener('change',simpleInput);
+$('#fillSimple').addEventListener('blur',function(e){var w=e.target.closest('[data-fn]'),n=w&&w.dataset.fn;if(!n)return;S.fill.touched[n]=true;validateLiveField(n)},true);
 function paperInput(e){var t=e.target,n=t.dataset&&t.dataset.fname;if(!n)return;
 var f=S.fill.fields.filter(function(x){return x.name===n})[0];if(!f)return;
 if(f.field_type==='radio'||f.field_type==='checkbox'){var box=$('#fillCanvas').querySelector('[data-fid="'+cssEsc(f.id)+'"]');
 S.fill.data[n]=$$('input:checked',box).map(function(i){return i.value}).join(', ')}
 else if(f.field_type==='checkbox_agree')S.fill.data[n]=t.checked?'ยอมรับ':'';
 else S.fill.data[n]=t.value;
-clearErr(n);updateProgress()}
+clearErr(n);validateLiveField(n);updateProgress();queueFormDraftSave()}
 $('#fillCanvas').addEventListener('input',paperInput);
 $('#fillCanvas').addEventListener('change',paperInput);
+$('#fillCanvas').addEventListener('blur',function(e){var f=e.target.closest('[data-fname]'),n=f&&f.dataset.fname;if(!n)return;S.fill.touched[n]=true;validateLiveField(n)},true);
 $('#okCopy').onclick=function(){if(navigator.clipboard)navigator.clipboard.writeText($('#okRef').textContent);toast('คัดลอกเลขอ้างอิงแล้ว',{type:'ok'})};
 $('#okPrint').onclick=function(){if(S.lastSub)printSheet(S.lastSub.fields,S.lastSub.data,S.lastSub.templateName+' #'+S.lastSub.referenceId)};
 $('#okDl').onclick=function(){if(S.lastSub)download(sheetHTML(S.lastSub.fields,S.lastSub.data,S.lastSub.templateName,false),fname(S.lastSub.templateName)+'_'+S.lastSub.referenceId+'.html')};
@@ -1534,7 +1649,9 @@ v.innerHTML='<div class="shead"><div class="stit"><h1>'+esc(t.name)+'</h1></div>
 '<button class="btn sm" data-b="undo" title="ย้อนกลับการกระทำ (Ctrl+Z)">'+ic('undo',13)+'ย้อนกลับ</button>'+
 '<button class="btn sm" data-b="redo" title="ทำซ้ำการกระทำ (Ctrl+Y)">'+ic('redo',13)+'ทำซ้ำ</button>'+
 '<button class="btn qa" data-b="parity">'+ic('shield')+'ตรวจความตรงแบบ</button>'+ 
-'<button class="btn" data-b="preview">'+ic('eye')+'ตัวอย่างกรอก</button>'+
+'<button class="btn" data-b="userSteps">'+ic('rows')+'จัดขั้นตอน User</button>'+
+'<button class="btn" data-b="userPreview">'+ic('eye')+'ตัวอย่าง User</button>'+
+'<button class="btn" data-b="preview">'+ic('file')+'ตัวอย่าง A4</button>'+
 '<button class="btn pri" data-b="save">'+ic('save')+'บันทึก</button></div></div>'+
 '<div class="bld"><div class="bcol">'+
 '<div class="pan" style="flex:none"><div class="ph">'+ic('plus',14)+'<b>เพิ่มฟิลด์</b></div><div class="pb"><div class="tools">'+
@@ -1772,12 +1889,45 @@ function ungroupSelected(){var b=S.b,ids=selectedFieldIds();if(!ids.length){toas
 pushUndo();ids.forEach(function(id){var f=b.fields.filter(function(x){return x.id===id})[0];if(f)f.field_group=''});LAYOUT.sig='';markDirty();repaint();renderControls();paintBadges();toast('ยกเลิก Group แล้ว',{type:'ok'})}
 function openPreview(data){var c=paintSheet('#pvCanvas',S.b.fields,'fill',data||{});
 $('#previewScrim').hidden=false;requestAnimationFrame(function(){zoomSheet(c,fitSheet($('#pvWrap')));});}
+function editUserSteps(){var t=tpl(S.b.id),fields=(S.b.fields||[]).filter(function(f){return INP.indexOf(f.field_type)>=0});
+if(!t||!fields.length){toast('เพิ่มฟิลด์สำหรับกรอกก่อนกำหนดขั้นตอน',{type:'warn'});return}
+var assigned=Object.create(null);((t.schema&&t.schema.userSteps)||[]).forEach(function(s){(s.fields||[]).forEach(function(n){if(!assigned[n])assigned[n]=s.title})});
+$('#modalTitle').textContent='จัดขั้นตอนการกรอกสำหรับ User';
+$('#modalBody').innerHTML='<p class="note">ใส่ชื่อขั้นตอนให้ฟิลด์ที่ต้องการให้อยู่กลุ่มเดียวกัน ฟิลด์ที่ใช้ชื่อขั้นตอนเดียวกันจะแสดงในหน้าเดียวกัน ส่วนว่างจะอยู่ใน “รายละเอียดคำขอ”</p><div class="userStepRows">'+fields.map(function(f){return '<label class="userStepRow"><span><b>'+esc(f.label||f.name)+'</b><small>'+esc(f.name)+'</small></span><input data-userstep-field="'+esc(f.name)+'" maxlength="80" value="'+esc(assigned[f.name]||'รายละเอียดคำขอ')+'" aria-label="ขั้นตอนของ '+esc(f.label||f.name)+'"></label>'}).join('')+'</div>';
+$('#modalFoot').innerHTML='<button class="btn" data-userstep="cancel">ยกเลิก</button><button class="btn pri" data-userstep="save">บันทึกขั้นตอน</button>';
+$('#modalScrim').hidden=false;$('#modalFoot').onclick=function(e){var a=e.target.closest('[data-userstep]');if(!a)return;if(a.dataset.userstep==='cancel'){closeModal();return}
+var grouped=[],by=Object.create(null);$$('#modalBody [data-userstep-field]').forEach(function(input){var title=String(input.value||'').trim().slice(0,80)||'รายละเอียดคำขอ',key=title.toLowerCase(),name=input.dataset.userstepField;if(!by[key]){by[key]={title:title,fields:[]};grouped.push(by[key])}by[key].fields.push(name)});
+if(grouped.length>20){toast('กำหนดได้ไม่เกิน 20 ขั้นตอน',{type:'warn'});return}
+t.schema=Object.assign({},t.schema||{});t.schema.userSteps=grouped;markDirty();closeModal();toast('อัปเดตขั้นตอน User แล้ว — กดบันทึกเพื่อส่งขึ้น Staging',{type:'ok'})}}
+function userPreviewSample(fields){var d=Object.create(null);(fields||[]).forEach(function(f){if(INP.indexOf(f.field_type)<0||isCitizenIdFieldClient_(f)){d[f.name]='';return}
+if(f.field_type==='date')d[f.name]='';else if(f.field_type==='checkbox'||f.field_type==='radio'||f.field_type==='select')d[f.name]=(f.options||[])[0]||'';else if(f.field_type==='checkbox_agree')d[f.name]='';else d[f.name]='ตัวอย่าง '+String(f.label||'ข้อมูล').slice(0,50)});return d}
+function adminPreviewField(f,sample){var label=esc(f.label||f.name),value=isCitizenIdFieldClient_(f)?'':String(sample[f.name]||''),ctl,opts=Array.isArray(f.options)&&f.options.length?f.options:['ตัวเลือก 1','ตัวเลือก 2'];
+if(f.field_type==='textarea')ctl='<textarea class="fin" disabled>'+esc(value)+'</textarea>';
+else if(f.field_type==='date')ctl='<input class="fin" type="date" disabled value="'+esc(value)+'">';
+else if(f.field_type==='select')ctl='<select class="fin" disabled>'+opts.map(function(x){return '<option'+(x===value?' selected':'')+'>'+esc(x)+'</option>'}).join('')+'</select>';
+else if(f.field_type==='radio'||f.field_type==='checkbox')ctl='<div class="fopts">'+opts.map(function(x,i){return '<label class="fopt'+(i===0?' on':'')+'"><input type="'+f.field_type+'" disabled'+(i===0?' checked':'')+'><span>'+esc(x)+'</span></label>'}).join('')+'</div>';
+else if(f.field_type==='checkbox_agree')ctl='<label class="fopt"><input type="checkbox" disabled><span>'+esc(f.label||'ยอมรับข้อตกลง')+'</span></label>';
+else ctl='<input class="fin" '+(f.field_type==='signature'?'placeholder="พิมพ์ชื่อเพื่อลงนาม"':'')+' disabled value="'+esc(value)+'">';
+return '<div class="fsc"><div class="fq"><span>'+label+'</span>'+(f.required?'<span class="rq">*</span>':'')+'</div>'+ctl+'</div>'}
+function renderAdminUserPreview(fields,groups,page,mode){var titles=['ข้อมูลผู้ยื่น'].concat(groups.map(function(g){return g.title}),['ตรวจทาน']),sample=userPreviewSample(fields);page=Math.max(0,Math.min(page,titles.length-1));
+$('#modalTitle').textContent='ตัวอย่างมุมมอง User';
+var userPage;if(page===0)userPage='<h4>ข้อมูลผู้ยื่น</h4><div class="reviewGroup"><dl><dt>ชื่อ-นามสกุล</dt><dd>ตัวอย่างผู้ยื่น</dd><dt>เลขบัตรประชาชน</dt><dd>กรอกในหน้าจริง · ไม่บันทึกในร่าง</dd></dl></div>';
+else if(page===titles.length-1)userPage='<h4>ตรวจทานข้อมูลก่อนส่ง</h4><p>หน้าจริงจะแสดงข้อมูลที่กรอกและปุ่มยืนยันส่ง</p><div class="reviewGroup"><dl><dt>ชื่อ-นามสกุล</dt><dd>ตัวอย่างผู้ยื่น</dd><dt>เลขบัตรประชาชน</dt><dd>•••••••••••••</dd>'+fields.filter(function(f){return INP.indexOf(f.field_type)>=0}).map(function(f){return '<dt>'+esc(f.label||f.name)+'</dt><dd>'+esc(isCitizenIdFieldClient_(f)?'ยังไม่ได้กรอก':sample[f.name]||'—')+'</dd>'}).join('')+'</dl></div>';
+else{var group=groups[page-1];userPage='<h4>'+esc(group.title)+'</h4>'+group.fields.map(function(f){return adminPreviewField(f,sample)}).join('')}
+$('#modalBody').innerHTML='<div class="userPreviewNotice">ตัวอย่างเท่านั้น · ไม่มีข้อมูลจริงและไม่มีการส่งคำขอ</div><div class="seg" style="margin:12px 0"><button class="btn sm '+(mode==='simple'?'on':'')+'" data-upv-mode="simple">📝 ฟอร์มง่าย</button><button class="btn sm '+(mode==='paper'?'on':'')+'" data-upv-mode="paper">📄 กระดาษ A4</button></div><div id="adminPreviewEasy" '+(mode==='paper'?'hidden':'')+'><div class="fillStepper">'+titles.map(function(x,i){return '<div class="fillStep'+(i===page?' on':'')+(i<page?' done':'')+'"><span class="n">'+(i<page?'✓':i+1)+'</span><span class="fillStepTitle">'+esc(x)+'</span></div>'}).join('')+'</div><div class="adminUserPreviewPage">'+userPage+'</div><div class="adminPreviewNav"><button class="btn" data-upv-page="-1" '+(page===0?'disabled':'')+'>← ก่อนหน้า</button><span>ขั้น '+(page+1)+' / '+titles.length+'</span><button class="btn pri" data-upv-page="1" '+(page===titles.length-1?'disabled':'')+'>ถัดไป →</button></div></div><div id="adminPreviewPaper" '+(mode==='simple'?'hidden':'')+'><div id="adminUserPreviewWrap" class="ma4"><div class="sc"></div></div></div>';
+$('#modalFoot').innerHTML='<button class="btn" data-upv-close>ปิดตัวอย่าง</button><span class="note">ระบบปิดการส่งคำขอในโหมดนี้</span>';
+if(mode==='paper'){var canvas=paintSheet('#adminUserPreviewPaper .sc',fields,'fill',sample);requestAnimationFrame(function(){if(canvas)zoomSheet(canvas,fitSheet($('#adminUserPreviewWrap')))});}
+$('#modalBody').onclick=function(e){var m=e.target.closest('[data-upv-mode]'),p=e.target.closest('[data-upv-page]');if(m){renderAdminUserPreview(fields,groups,page,m.dataset.upvMode);return}if(p){renderAdminUserPreview(fields,groups,page+(Number(p.dataset.upvPage)||0),mode)}};
+$('#modalFoot').onclick=function(e){if(e.target.closest('[data-upv-close]'))closeModal()}}
+function openAdminUserPreview(){var t=tpl(S.b.id);if(!t)return;var fields=uniqueFields(S.b.fields||[]),groups=buildFillGroups(t,fields);renderAdminUserPreview(fields,groups,0,'simple');$('#modalScrim').hidden=false}
 function bindBuilder(){var b=S.b,v=$('#view');
 $('#bName').oninput=function(e){var t=tpl(b.id);if(t){t.name=e.target.value;markDirty()}};
 v.onclick=function(e){var bt=e.target.closest('[data-b]'),tl=e.target.closest('.tool');
 if(tl){addField(tl.dataset.ft);return}if(!bt)return;var k=bt.dataset.b;
 if(k==='save')saveBuilder(false);
 else if(k==='parity')parityDrawer();
+else if(k==='userSteps')editUserSteps();
+else if(k==='userPreview')openAdminUserPreview();
 else if(k==='group')groupSelected();
 else if(k==='ungroup')ungroupSelected();
 else if(k==='clip')clipDrawer();
@@ -1877,7 +2027,7 @@ if(isUuid(f.id))key=f.id;else key=f._clientId;
 ids[i]=key;return apiField(f,key)});
 var maxDeletedPerRequest=30;sentDeleted=snapshotDeleted.slice(0,maxDeletedPerRequest);
 if(snapshotDeleted.length>sentDeleted.length&&!auto)toast('พบรายการฟิลด์เก่าที่ต้องล้าง '+snapshotDeleted.length+' รายการ — แบ่งล้างครั้งละ '+maxDeletedPerRequest+' รายการเพื่อไม่ให้ URL ของ GAS ยาวเกิน',{type:'warn',ms:7000});
-return rawApi('saveFormLayout',{templateId:tid,meta:{name:t.name,description:t.description,is_active:isActive},fields:send,deletedIds:sentDeleted},true,{timeout:40000})})
+ return rawApi('saveFormLayout',{templateId:tid,meta:{name:t.name,description:t.description,is_active:isActive,schema:t.schema||{}},fields:send,deletedIds:sentDeleted},true,{timeout:40000})})
 .then(function(res){var unresolved=[],savedFields=JSON.parse(JSON.stringify(snapshot));
 savedFields.forEach(function(f,i){var n=mappedFieldId(res,ids[i],i);if(n){if(b.sel===f.id)b.sel=n;var current=b.fields.filter(function(x){return x.id===f.id})[0];if(current){current.id=n;delete current._clientId}else if(!isUuid(f.id)&&isUuid(n))b.deleted.push(n);f.id=n;delete f._clientId}else if(!isUuid(f.id))unresolved.push(f.name||ids[i])});
 if(unresolved.length)throw new Error('เซิร์ฟเวอร์ไม่ส่งรหัสฟิลด์กลับมา: '+unresolved.join(', ')+' — ยกเลิกการยืนยันการบันทึกเพื่อป้องกันฟิลด์ซ้ำ');
@@ -2335,7 +2485,8 @@ var dirs={arrowleft:[-1,0],arrowright:[1,0],arrowup:[0,-1],arrowdown:[0,1]},dir=
 if(dir){e.preventDefault();var f=S.b.fields.filter(function(x){return x.id===S.b.sel})[0];if(!f)return;
 pushUndo();var st=e.shiftKey?5:S.b.step,items=groupMoveItems(f),d=clampGroupDelta(items,dir[0]*st,dir[1]*st);
 applyGroupDelta(items,d.dx,d.dy);syncGeom(f);markDirty();decorate();paintBadges()}});
-window.addEventListener('beforeunload',function(e){if(S.b.dirty||QUEUE.length){e.preventDefault();e.returnValue=''}});
+window.addEventListener('beforeunload',function(e){var fillHasData=S.fill&&S.pubView==='fill'&&(!!$('#fillName').value.trim()||!!$('#fillCid').value.trim()||Object.keys(S.fill.data||{}).some(function(k){return !!String(S.fill.data[k]||'').trim()}));
+var fillUnsaved=fillHasData&&(!S.fill.draftId||!!draftSaveTimer||S.fill.draftSaving);if(S.b.dirty||QUEUE.length||fillUnsaved){e.preventDefault();e.returnValue=''}});
 window.addEventListener('resize',debounce(function(){
 if(S.shell==='admin'&&S.sec==='builder'&&S.b.id&&$('#canvas')){S.b.zoom=fitSheet($('#cwrap'));zoomSheet($('#canvas'),S.b.zoom);renderControls()}
 if(S.shell==='public'&&S.pubView==='fill'&&S.fill.mode==='paper'){S.fill.zoom=fitSheet($('#fillWrap'));applyFillZoom()}
