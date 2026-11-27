@@ -531,7 +531,7 @@ html,body{margin:0;padding:0;font-family:'Noto Sans Thai','Sarabun',sans-serif;c
 <div class="fld" style="margin:0"><label for="fillCid">เลขบัตรประชาชน 13 หลัก</label><input id="fillCid" inputmode="numeric" maxlength="13" placeholder="1234567890123"></div>
 </div></div>
 <div class="ftb" id="fillToolbar">
-<div class="seg" id="fillSeg"><button type="button" data-fm="paper">📄 กระดาษ A4</button><button type="button" data-fm="simple">📋 ฟอร์มง่าย</button></div>
+<div class="seg" id="fillSeg"><button type="button" data-fm="simple">📋 ฟอร์มง่าย</button><button type="button" data-fm="paper">📄 กระดาษ A4</button></div>
 <div class="fzm" id="fillZoom"><button type="button" class="btn sm ic" data-fz="out">−</button><button type="button" class="btn sm" data-fz="fit" id="fillZoomLbl">100%</button><button type="button" class="btn sm ic" data-fz="in">+</button></div>
 <span class="sp"></span><span class="fpg" id="fillProg"><span class="pb2"><i></i></span><b>0/0</b></span>
 </div>
@@ -695,7 +695,7 @@ Object.keys(DB.drafts).forEach(function(k){if(!ids[k])delete DB.drafts[k]});
 var persist=debounce(function(){try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){}},400);
 var token=null;try{token=localStorage.getItem(TOK)}catch(e){}
 var S={shell:'public',sec:null,me:'',role:'',conn:'wait',connMsg:'',pubView:'home',pubQ:'',
-fill:{tpl:null,fields:[],data:{},mode:'paper',zoom:0,errors:{}},lastSub:null,
+fill:{tpl:null,fields:[],data:{},mode:'simple',zoom:0,errors:{}},lastSub:null,
 forms:{q:'',status:'all',dept:'all',sort:'updated',view:'grid',fav:false},
 inbox:{tpl:'all',status:'ALL',q:'',sort:'newest',sel:new Set()},mine:{q:'',status:'all'},
 staff:{q:'',dept:'all',active:'all',sel:new Set()},
@@ -1081,7 +1081,7 @@ ensureFields(id,isUuid(id),true).then(function(t){
 if(!t){toast('ไม่พบแบบฟอร์มนี้',{type:'warn'});pubGo('forms');return}
 var fields=uniqueFields(t.fields||[]);
 if(!fields.some(function(f){return INP.indexOf(f.field_type)>=0})){toast('ฟอร์มนี้ยังไม่มีช่องให้กรอก',{type:'warn'});pubGo('forms');return}
-S.fill={tpl:t.id,fields:fields,data:{},mode:'paper',zoom:0,errors:{}};
+S.fill={tpl:t.id,fields:fields,data:{},mode:'simple',zoom:0,errors:{}};
 initFillData();$('#fillTitle').textContent=t.name;$('#fillDesc').textContent=t.description||'';
 $('#fillName').value='';$('#fillCid').value='';
 showPub('fill');history.replaceState(null,'','#/fill/'+t.id);setFillMode(S.fill.mode);
